@@ -326,8 +326,8 @@ async def read_dashboard(current_user: User = Depends(get_current_user), db: Ses
     if current_user.role == UserRole.Admin:
         data["admin_stats"] = "Showing sensitive system-wide metrics only visible to Admin."
         users = db.query(User).all()
-        data["vip_users"] = [UserSummary(id=u.id, username=u.username, email=u.email, role=u.role) for u in users if u.role == UserRole.VIP]
-        data["free_users"] = [UserSummary(id=u.id, username=u.username, email=u.email, role=u.role) for u in users if u.role == UserRole.Free]
+        data["vip_users"] = [UserSummary(id=u.id, username=u.username, email=u.email, role=u.role) for u in users if u.role in (UserRole.VIP, "VIP")]
+        data["free_users"] = [UserSummary(id=u.id, username=u.username, email=u.email, role=u.role) for u in users if u.role in (UserRole.Free, "Free")]
     elif current_user.role == UserRole.VIP:
         data["vip_perks"] = "As a VIP, you have access to advanced AI projections and lower transaction fees."
     else:

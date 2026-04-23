@@ -2,15 +2,15 @@ import os
 import bcrypt
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, Enum as SQLEnum
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy import create_engine, Column, Integer, String, Enum as SQLEnum, ForeignKey, Float, DateTime
+from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -32,16 +32,33 @@ class UserRole(str, Enum):
     VIP = "VIP"
     Free = "Free"
 
+class TransactionType(str, Enum):
+    Income = "Income"
+    Expense = "Expense"
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String)
     role = Column(SQLEnum(UserRole), default=UserRole.Free)
     monthly_income = Column(Integer, nullable=True)
     savings_goal = Column(String, nullable=True)
     dream_item = Column(String, nullable=True)
     max_spending = Column(Integer, nullable=True)
+    transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    amount = Column(Float)
+    type = Column(SQLEnum(TransactionType))
+    category = Column(String)
+    description = Column(String)
+    date = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", back_populates="transactions")
 
 Base.metadata.create_all(bind=engine)
 
@@ -71,6 +88,7 @@ class Token(BaseModel):
 
 class ProfileUpdate(BaseModel):
     username: Optional[str] = None
+    email: Optional[str] = None
     monthly_income: Optional[int] = None
     savings_goal: Optional[str] = None
     dream_item: Optional[str] = None
@@ -78,12 +96,58 @@ class ProfileUpdate(BaseModel):
 
 class UserOut(BaseModel):
     username: str
+    email: Optional[str]
     role: UserRole
     monthly_income: Optional[int]
     savings_goal: Optional[str]
     dream_item: Optional[str]
     max_spending: Optional[int]
     setup_completed: bool
+
+class UserSummary(BaseModel):
+    id: int
+    username: str
+    email: Optional[str]
+    role: UserRole
+
+class AccountCreate(BaseModel):
+    username: str
+    email: str
+    password: str = "123"
+    role: UserRole
+
+class TransactionCreate(BaseModel):
+    amount: float
+    type: TransactionType
+    category: str
+    description: str
+
+class TransactionOut(BaseModel):
+    id: int
+    amount: float
+    type: TransactionType
+    category: str
+    description: str
+    date: datetime
+
+    class Config:
+        from_attributes = True
+
+class DashboardData(BaseModel):
+    username: str
+    role: UserRole
+    monthly_income: Optional[int]
+    max_spending: Optional[int]
+    total_balance: float
+    total_income: float
+    total_expenses: float
+    recent_transactions: List[TransactionOut]
+    message: str
+    admin_stats: Optional[str] = None
+    vip_perks: Optional[str] = None
+    free_status: Optional[str] = None
+    vip_users: Optional[List[UserSummary]] = None
+    free_users: Optional[List[UserSummary]] = None
 
 class LoginRequest(BaseModel):
     username: str
@@ -187,6 +251,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
             
     return {
         "username": current_user.username,
+        "email": current_user.email,
         "role": current_user.role,
         "monthly_income": current_user.monthly_income,
         "savings_goal": current_user.savings_goal,
@@ -204,6 +269,12 @@ async def update_me(update_data: ProfileUpdate, current_user: User = Depends(get
             raise HTTPException(status_code=400, detail="Username already taken")
         current_user.username = update_data.username
     
+    if update_data.email:
+        existing = db.query(User).filter(User.email == update_data.email, User.id != current_user.id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already taken")
+        current_user.email = update_data.email
+
     if update_data.monthly_income is not None:
         current_user.monthly_income = update_data.monthly_income
     if update_data.savings_goal is not None:
@@ -216,22 +287,71 @@ async def update_me(update_data: ProfileUpdate, current_user: User = Depends(get
     db.commit()
     return {"message": "Profile updated successfully"}
 
-@app.get("/dashboard")
-async def read_dashboard(current_user: User = Depends(get_current_user)):
+@app.post("/transactions", response_model=TransactionOut)
+async def create_transaction(transaction: TransactionCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    db_transaction = Transaction(**transaction.model_dump(), user_id=current_user.id)
+    db.add(db_transaction)
+    db.commit()
+    db.refresh(db_transaction)
+    return db_transaction
+
+@app.get("/transactions", response_model=List[TransactionOut])
+async def get_transactions(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return db.query(Transaction).filter(Transaction.user_id == current_user.id).order_by(Transaction.date.desc()).all()
+
+@app.get("/dashboard", response_model=DashboardData)
+async def read_dashboard(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    transactions = db.query(Transaction).filter(Transaction.user_id == current_user.id).all()
+    
+    total_income = sum(t.amount for t in transactions if t.type == TransactionType.Income)
+    total_expenses = sum(t.amount for t in transactions if t.type == TransactionType.Expense)
+    
+    # Total balance = Initial baseline (monthly_income) + sum of all transaction changes
+    total_balance = float(current_user.monthly_income or 0) + total_income - total_expenses
+
+    recent = db.query(Transaction).filter(Transaction.user_id == current_user.id).order_by(Transaction.date.desc()).limit(10).all()
+
     data = {
         "username": current_user.username,
         "role": current_user.role,
-        "message": f"Welcome to the dashboard, {current_user.username}!"
+        "monthly_income": current_user.monthly_income,
+        "max_spending": current_user.max_spending,
+        "total_balance": total_balance,
+        "total_income": total_income,
+        "total_expenses": total_expenses,
+        "recent_transactions": recent,
+        "message": f"Welcome back, {current_user.username}!"
     }
     
     if current_user.role == UserRole.Admin:
         data["admin_stats"] = "Showing sensitive system-wide metrics only visible to Admin."
+        users = db.query(User).all()
+        data["vip_users"] = [UserSummary(id=u.id, username=u.username, email=u.email, role=u.role) for u in users if u.role == UserRole.VIP]
+        data["free_users"] = [UserSummary(id=u.id, username=u.username, email=u.email, role=u.role) for u in users if u.role == UserRole.Free]
     elif current_user.role == UserRole.VIP:
-        data["vip_perks"] = "Here are your exclusive VIP rewards and early-access features."
+        data["vip_perks"] = "As a VIP, you have access to advanced AI projections and lower transaction fees."
     else:
-        data["free_status"] = "Upgrade to VIP or Admin for more features!"
+        data["free_status"] = "You're using the standard plan. Upgrade to VIP to see advanced insights!"
 
     return data
+
+@app.post("/accounts", response_model=UserSummary)
+async def create_account(account: AccountCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.role != UserRole.Admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if db.query(User).filter(User.username == account.username).first():
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    if db.query(User).filter(User.email == account.email).first():
+        raise HTTPException(status_code=400, detail="Email already exists")
+        
+    hashed_password = get_password_hash(account.password)
+    new_user = User(username=account.username, email=account.email, hashed_password=hashed_password, role=account.role)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
 @app.post("/seed")
 async def seed_users(db: Session = Depends(get_db)):

@@ -40,19 +40,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
   return (
     <div 
-      className={`bg-white border-r border-slate-200 flex flex-col h-screen z-40 overflow-x-hidden fixed md:sticky top-0 transition-[width,transform] duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
+      className={`bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen z-40 overflow-x-hidden fixed md:sticky top-0 transition-[width,transform,background-color] duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
         isOpen 
           ? 'w-64 translate-x-0' 
           : 'w-0 -translate-x-full md:translate-x-0 md:w-20'
       }`}
     >
       {/* Header Section */}
-      <div className="flex items-center h-[73px] border-b border-slate-50 px-5 shrink-0 overflow-hidden">
+      <div className="flex items-center h-[73px] border-b border-slate-50 dark:border-slate-800 px-5 shrink-0 overflow-hidden">
         <div className="w-10 h-10 min-w-[40px] bg-gradient-to-br from-rose-500 to-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-500/20 shrink-0">
           <ShieldCheck size={24} />
         </div>
         <div className={`ml-3 transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
-          <span className="text-xl font-bold tracking-tight text-slate-900 whitespace-nowrap">
+          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
             UBAK <span className="text-rose-500">PRO</span>
           </span>
         </div>
@@ -67,8 +67,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             className={({ isActive }) =>
               `flex items-center h-12 px-3 rounded-xl text-sm font-bold transition-all duration-300 relative group ${
                 isActive
-                  ? 'bg-rose-50 text-rose-500 shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-500 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
               } ${!isOpen && 'md:justify-center'}`
             }
           >

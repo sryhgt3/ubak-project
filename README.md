@@ -69,6 +69,7 @@ Aplikasi akan tersedia di:
 #### 1. Backend
 ```bash
 cd backend
+cp .env.example .env  # Buat file .env dari template
 python -m venv venv
 source venv/bin/activate  # atau venv\Scripts\activate di Windows
 pip install -r requirements.txt

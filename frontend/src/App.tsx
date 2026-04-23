@@ -5,22 +5,9 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
+import AddTransactionPage from './pages/AddTransactionPage';
+import AddAccountPage from './pages/AddAccountPage';
 import Layout from './components/Layout';
-
-// Temporary placeholder components
-const AddTransaction = () => (
-  <div className="p-10">
-    <h1 className="text-3xl font-bold text-slate-900">Add Transaction</h1>
-    <p className="text-slate-500 mt-2">Transaction management interface coming soon.</p>
-  </div>
-);
-
-const AddAccount = () => (
-  <div className="p-10">
-    <h1 className="text-3xl font-bold text-slate-900">Add Account</h1>
-    <p className="text-slate-500 mt-2">Account management interface coming soon.</p>
-  </div>
-);
 
 const App: React.FC = () => {
   return (
@@ -34,8 +21,8 @@ const App: React.FC = () => {
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/add-transaction" element={<AddTransaction />} />
-            <Route path="/add-account" element={<AddAccount />} />
+            <Route path="/add-transaction" element={<AddTransactionPage />} />
+            <Route path="/add-account" element={<AddAccountPage />} />
           </Route>
 
           {/* Fallback route */}

@@ -36,7 +36,7 @@ const DashboardPage: React.FC = () => {
 
     const fetchDashboard = async () => {
       try {
-        const response = await axios.get('http://localhost:8800/dashboard', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/dashboard`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setDashboardData(response.data);
@@ -268,29 +268,78 @@ const DashboardPage: React.FC = () => {
                 {[1, 2, 3, 4].map(i => <div key={i} className="w-full border-t border-slate-200 dark:border-slate-700" />)}
               </div>
 
-              {chartView === 'comparison' ? (
-                <>
-                  <div className="flex flex-col items-center gap-4 flex-1 max-w-[120px]">
-                    <div 
-                      className="w-full bg-slate-900 dark:bg-white rounded-2xl transition-all duration-1000 shadow-2xl shadow-slate-200 dark:shadow-none"
-                      style={{ height: `${Math.max(15, (dashboardData?.total_income / (dashboardData?.total_income + dashboardData?.total_expenses + 1)) * 100)}%` }}
-                    />
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Inflow</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-4 flex-1 max-w-[120px]">
-                    <div 
-                      className="w-full bg-rose-500 rounded-2xl transition-all duration-1000 shadow-2xl shadow-rose-100 dark:shadow-none"
-                      style={{ height: `${Math.max(15, (dashboardData?.total_expenses / (dashboardData?.total_income + dashboardData?.total_expenses + 1)) * 100)}%` }}
-                    />
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Outflow</span>
-                  </div>
-                </>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-center space-y-3">
-                   <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300">
-                      <TrendingUp size={24} />
-                   </div>
-                   <p className="text-slate-400 dark:text-slate-500 text-sm font-medium">Historical trends for <span className="font-bold text-slate-900 dark:text-white capitalize">{chartView}</span><br />will appear here.</p>
+              {chartView === 'comparison' ? (() => {
+                  const inc = dashboardData?.total_income || 0;
+                  const exp = dashboardData?.total_expenses || 0;
+                  const maxComp = Math.max(inc, exp, 1);
+                  return (
+                    <>
+                      <div className="flex flex-col items-center gap-4 flex-1 max-w-[120px] group/bar h-full justify-end">
+                        <div className="relative w-full flex flex-col items-center justify-end h-full">
+                          <div className="absolute -top-10 opacity-0 group-hover/bar:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] px-3 py-1.5 rounded-lg whitespace-nowrap z-20 shadow-xl font-bold">
+                            {formatCurrency(inc)}
+                          </div>
+                          <div 
+                            className="w-full bg-emerald-500 rounded-t-2xl transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.2)] dark:shadow-[0_0_15px_rgba(16,185,129,0.1)] relative overflow-hidden"
+                            style={{ height: `${(inc / maxComp) * 100}%`, minHeight: '8px' }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2">Inflow</span>
+                      </div>
+                      
+                      <div className="flex flex-col items-center gap-4 flex-1 max-w-[120px] group/bar h-full justify-end">
+                        <div className="relative w-full flex flex-col items-center justify-end h-full">
+                          <div className="absolute -top-10 opacity-0 group-hover/bar:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] px-3 py-1.5 rounded-lg whitespace-nowrap z-20 shadow-xl font-bold">
+                            {formatCurrency(exp)}
+                          </div>
+                          <div 
+                            className="w-full bg-rose-500 rounded-t-2xl transition-all duration-1000 shadow-[0_0_15px_rgba(244,63,94,0.2)] dark:shadow-[0_0_15px_rgba(244,63,94,0.1)] relative overflow-hidden"
+                            style={{ height: `${(exp / maxComp) * 100}%`, minHeight: '8px' }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2">Outflow</span>
+                      </div>
+                    </>
+                  );
+              })() : (
+                <div className="w-full h-full flex items-end justify-around gap-4 h-full">
+                   {(() => {
+                      const type = chartView === 'income' ? 'Income' : 'Expense';
+                      const filtered = dashboardData?.recent_transactions?.filter((t: any) => t.type === type) || [];
+                      const recentItems = [...filtered].reverse().slice(-6);
+                      const max = Math.max(...recentItems.map((t: any) => t.amount), 1);
+                      
+                      return recentItems.length > 0 ? recentItems.map((t: any, index: number) => (
+                        <div key={t.id + '-' + index} className="flex flex-col items-center gap-3 flex-1 max-w-[60px] group/bar h-full justify-end">
+                          <div className="relative w-full flex flex-col items-center justify-end h-full">
+                            <div className="absolute -top-12 opacity-0 group-hover/bar:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] px-3 py-1.5 rounded-lg whitespace-nowrap z-20 shadow-xl font-bold flex flex-col items-center">
+                              <span>{formatCurrency(t.amount)}</span>
+                              <span className="text-[8px] text-slate-300 font-medium">{t.category}</span>
+                            </div>
+                            <div 
+                              className={`w-full rounded-t-xl transition-all duration-700 relative overflow-hidden ${chartView === 'income' ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.3)]' : 'bg-rose-400 shadow-[0_0_10px_rgba(251,113,133,0.3)]'}`}
+                              style={{ height: `${(t.amount / max) * 100}%`, minHeight: '8px' }}
+                            >
+                               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter truncate w-full text-center">
+                            {new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                          </span>
+                        </div>
+                      )) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-center space-y-3 pb-10">
+                          <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300">
+                             <TrendingUp size={24} />
+                          </div>
+                          <p className="text-slate-400 dark:text-slate-500 text-sm font-medium">No {chartView} data to visualize.</p>
+                        </div>
+                      );
+                   })()}
                 </div>
               )}
             </div>
@@ -331,7 +380,7 @@ const DashboardPage: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Inflow</h3>
-            <button onClick={() => navigate('/add-transaction')} className="text-rose-500 text-xs font-bold flex items-center gap-1 hover:underline">
+            <button onClick={() => navigate('/inflow')} className="text-rose-500 text-xs font-bold flex items-center gap-1 hover:underline">
               SEE ALL <ExternalLink size={12} />
             </button>
           </div>
@@ -362,7 +411,7 @@ const DashboardPage: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Outflow</h3>
-            <button onClick={() => navigate('/add-transaction')} className="text-rose-500 text-xs font-bold flex items-center gap-1 hover:underline">
+            <button onClick={() => navigate('/outflow')} className="text-rose-500 text-xs font-bold flex items-center gap-1 hover:underline">
               SEE ALL <ExternalLink size={12} />
             </button>
           </div>

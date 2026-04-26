@@ -14,15 +14,21 @@ This is the frontend for the UBAK Web Application, built with React 19, TypeScri
    ```bash
    cd frontend
    ```
-2. Install dependencies:
+2. Setup environment variables:
+   - Copy `.env.example` to `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Update `VITE_API_URL` in `.env` with your backend URL (e.g., your ngrok URL).
+3. Install dependencies:
    ```bash
    npm install
    ```
-3. Start the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
-4. Build for production:
+5. Build for production:
    ```bash
    npm run build
    ```

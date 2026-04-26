@@ -5,7 +5,9 @@ import {
   LayoutDashboard, 
   PlusCircle, 
   UserPlus, 
-  ShieldCheck
+  ShieldCheck,
+  ArrowUpCircle,
+  ArrowDownCircle
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -20,6 +22,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       name: 'Dashboard', 
       path: '/dashboard', 
       icon: <LayoutDashboard size={20} />, 
+      roles: ['VIP', 'Free'] 
+    },
+    { 
+      name: 'Inflow', 
+      path: '/inflow', 
+      icon: <ArrowUpCircle size={20} />, 
+      roles: ['VIP', 'Free'] 
+    },
+    { 
+      name: 'Outflow', 
+      path: '/outflow', 
+      icon: <ArrowDownCircle size={20} />, 
       roles: ['VIP', 'Free'] 
     },
     { 

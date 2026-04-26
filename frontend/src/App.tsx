@@ -7,6 +7,8 @@ import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import AddTransactionPage from './pages/AddTransactionPage';
 import AddAccountPage from './pages/AddAccountPage';
+import InflowPage from './pages/InflowPage';
+import OutflowPage from './pages/OutflowPage';
 import Layout from './components/Layout';
 
 const App: React.FC = () => {
@@ -23,6 +25,8 @@ const App: React.FC = () => {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/add-transaction" element={<AddTransactionPage />} />
             <Route path="/add-account" element={<AddAccountPage />} />
+            <Route path="/inflow" element={<InflowPage />} />
+            <Route path="/outflow" element={<OutflowPage />} />
           </Route>
 
           {/* Fallback route */}

@@ -31,7 +31,7 @@ const AddAccountPage: React.FC = () => {
     setIsSubmitting(true);
     setError('');
     try {
-      await axios.post('http://localhost:8800/accounts', formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/accounts`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess(true);

@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import SetupModal from './SetupModal';
 import Chatbot from './Chatbot';
-import { Sun, Moon } from 'lucide-react';
 
 const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -14,7 +13,6 @@ const Layout: React.FC = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [targetTheme, setTargetTheme] = useState<'light' | 'dark' | null>(null);
   const location = useLocation();
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isDarkMode) {

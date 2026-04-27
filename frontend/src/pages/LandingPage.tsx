@@ -1,270 +1,198 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
-  TrendingUp, 
-  Target, 
-  ArrowRight, 
-  Sun, 
-  Moon, 
-  Wallet, 
+  ArrowUpRight, 
   Zap, 
-  BarChart3,
-  ChevronDown
+  Sparkles,
+  Activity,
+  Globe
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark';
-  });
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [targetTheme, setTargetTheme] = useState<'light' | 'dark' | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
+  // Momentum Style forces a dark theme experience
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
-  const toggleDarkMode = (event: React.MouseEvent) => {
-    if (isAnimating) return;
-
-    const x = event.clientX;
-    const y = event.clientY;
-    const nextIsDark = !isDarkMode;
-
-    document.documentElement.style.setProperty('--x', `${x}px`);
-    document.documentElement.style.setProperty('--y', `${y}px`);
-
-    setTargetTheme(nextIsDark ? 'dark' : 'light');
-    setIsAnimating(true);
-    
-    setTimeout(() => {
-      setIsDarkMode(nextIsDark);
-    }, 400);
-
-    setTimeout(() => {
-      setIsAnimating(false);
-      setTargetTheme(null);
-    }, 800);
-  };
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 font-sans selection:bg-rose-500/30 selection:text-rose-900 overflow-x-hidden">
-      {/* Animation Overlay */}
-      {isAnimating && (
-        <div 
-          className={`theme-transition-overlay animate-reveal ${targetTheme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}
-        />
-      )}
+    <div className="min-h-screen bg-[#030303] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden font-sans">
+      {/* Ambient Background Glows */}
+      <div className="fixed top-[-20%] left-[-10%] w-[60%] h-[60%] bg-violet-600/20 blur-[150px] rounded-full pointer-events-none mix-blend-screen" />
+      <div className="fixed bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-cyan-600/20 blur-[150px] rounded-full pointer-events-none mix-blend-screen" />
 
-      {/* Hero Section with Video */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Video Background */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-slate-950/60 dark:bg-slate-950/80 z-10" />
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover scale-105 blur-[2px]"
-          >
-            {/* Using a high-quality abstract finance/city background video from Pexels */}
-            <source src="https://cdn.pixabay.com/video/2021/09/03/87403-601466718_large.mp4" type="video/mp4" />
-          </video>
-        </div>
-
-        {/* Floating Navigation */}
-        <nav className="absolute top-0 w-full p-8 flex justify-between items-center z-50">
-          <div className="flex items-center gap-2 group cursor-pointer">
-            <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center text-white shrink-0">
-              <ShieldCheck size={24} />
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-white">UBAK <span className="text-rose-500 underline underline-offset-4 decoration-rose-500/30">PRO</span></span>
+      {/* Floating Navigation */}
+      <nav className="fixed top-0 w-full p-6 flex justify-between items-center z-50 backdrop-blur-md border-b border-white/5 bg-[#030303]/50">
+        <div className="flex items-center gap-3 group cursor-pointer">
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-violet-600 rounded-xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+            <Zap size={20} fill="currentColor" />
           </div>
-        </nav>
+          <span className="text-2xl font-black tracking-tighter text-white">
+            UBAK<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">PRO</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-6">
+            <Link to="/login" className="hidden md:flex text-sm font-bold text-slate-300 hover:text-white transition-colors">Sign In</Link>
+            <Link to="/login" className="bg-white text-black px-6 py-2.5 rounded-full text-sm font-black hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">Get Started</Link>
+        </div>
+      </nav>
 
-        {/* Hero Content */}
-        <div className="relative z-20 text-center px-6 max-w-5xl animate-in fade-in zoom-in-95 duration-1000">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/20 backdrop-blur-xl border border-rose-500/30 text-rose-300 text-[10px] font-bold tracking-widest uppercase mb-8">
-            <TrendingUp size={14} />
-            <span>Master Your Financial Future</span>
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 md:pt-32 px-4">
+        <div className="relative z-20 text-center max-w-6xl mx-auto flex flex-col items-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/5 border border-white/10 text-cyan-400 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-6 md:mb-8 backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <Sparkles size={14} /> The Ultimate Finance Dashboard
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight leading-[1.1] mb-8">
-            Success is a <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-orange-400 to-amber-300">Choice.</span>
+          <h1 className="text-5xl md:text-8xl lg:text-[10rem] font-black text-white tracking-tighter leading-[0.85] mb-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
+            FAST AND <br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500">SECURE FINANCE.</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto font-medium leading-relaxed mb-10 drop-shadow-md">
-            Stop guessing. Start growing. Track your wealth, optimize every expense, and reach your savings milestones with the most elegant financial partner.
+          <p className="text-base md:text-2xl text-slate-400 max-w-3xl mx-auto font-medium leading-relaxed mb-10 md:l-12 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
+            Manage your money with ease. A modern, fast, and beautiful dashboard designed to give you complete control over your finances.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500 px-4">
             <Link 
               to="/login" 
-              className="group bg-white text-slate-900 font-bold py-4 px-10 rounded-xl transition-all duration-300 shadow-xl hover:bg-slate-50 active:scale-95 flex items-center justify-center gap-2"
+              className="group bg-gradient-to-r from-cyan-400 to-violet-600 text-white font-black py-4 md:py-5 px-8 md:px-12 rounded-full transition-all duration-300 shadow-[0_0_40px_rgba(34,211,238,0.4)] hover:shadow-[0_0_60px_rgba(139,92,246,0.6)] hover:scale-105 active:scale-95 flex items-center justify-center gap-3 text-base md:text-lg"
             >
-              Access Your Wealth <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              Get Started <ArrowUpRight size={22} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </Link>
-            <button className="bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold py-4 px-10 rounded-xl transition-all duration-300 hover:bg-white/20">
-              Watch The Journey
-            </button>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce text-white/30">
-          <ChevronDown size={28} />
-        </div>
-      </section>
-
-      {/* Main Philosophy Section */}
-      <section className="py-24 px-6 relative bg-white dark:bg-slate-950 transition-colors duration-500">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-6">
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-              The Path to <br/>
-              <span className="text-rose-500">Wealth</span> is Clarity.
-            </h2>
-            <p className="text-lg text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-              We believe that financial success isn't about how much you earn, but how much you keep and how you grow it. UBAK Pro provides the clarity you need to make successful decisions every single day.
-            </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { icon: <Target className="text-orange-500" />, title: "Precise Budgeting", desc: "Know where every penny goes." },
-                { icon: <Zap className="text-amber-500" />, title: "Instant Insights", desc: "Real-time growth analytics." },
-              ].map((item, idx) => (
-                <div key={idx} className="flex gap-4 items-start p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                  <div className="p-2.5 bg-white dark:bg-slate-800 rounded-xl shadow-sm">{item.icon}</div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{item.title}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Decorative Card Stack */}
-          <div className="relative group">
-             <div className="relative bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 font-bold">
-                       <BarChart3 size={20} />
-                    </div>
-                    <div>
-                       <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Success Rate</h3>
-                       <p className="text-[10px] text-slate-400">Growth Projection</p>
-                    </div>
-                  </div>
-                  <span className="text-emerald-500 font-bold text-xl">+42%</span>
-                </div>
-                <div className="space-y-3">
-                  {[80, 60, 95, 40].map((w, i) => (
-                    <div key={i} className="w-full bg-slate-50 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                      <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000 opacity-80" style={{ width: `${w}%` }} />
-                    </div>
-                  ))}
-                </div>
-             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Success Pillars */}
-      <section className="py-24 px-6 bg-slate-50 dark:bg-slate-900/50 transition-colors duration-500">
-        <div className="max-w-7xl mx-auto text-center space-y-16">
-          <div className="max-w-3xl mx-auto space-y-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">Your Pillars of Success</h2>
-            <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">Three core principles that turn savings into lasting success.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { 
-                icon: <Wallet className="text-emerald-500" size={32} />, 
-                title: "Financial Discipline", 
-                desc: "Success starts with what you save. Automate your discipline and watch your capital grow effortlessly." 
-              },
-              { 
-                icon: <Target className="text-rose-500" size={32} />, 
-                title: "Strategic Goals", 
-                desc: "Set, track, and conquer your dream milestones. Whether it's a new home or early retirement." 
-              },
-              { 
-                icon: <TrendingUp className="text-blue-500" size={32} />, 
-                title: "Compound Growth", 
-                desc: "Every penny saved is a seed planted. Our visual analytics show you the future impact of today's choices." 
-              },
-            ].map((pillar, i) => (
-              <div key={i} className="group bg-white dark:bg-slate-900 p-10 rounded-2xl border border-slate-200/60 dark:border-slate-800 hover:shadow-md transition-all duration-500 text-left space-y-6">
-                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center transition-transform duration-500">
-                  {pillar.icon}
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{pillar.title}</h3>
-                <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium text-sm">
-                  {pillar.desc}
-                </p>
+        {/* Abstract 3D Dashboard Mockup Elements */}
+        <div className="mt-16 md:mt-24 w-full max-w-6xl relative h-[30vh] sm:h-[40vh] md:h-[50vh] perspective-1000 animate-in fade-in slide-in-from-bottom-24 duration-1000 delay-700">
+           <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-transparent z-10 pointer-events-none"></div>
+           <div className="w-full h-full bg-[#0a0a0a]/80 border border-white/10 rounded-t-[2rem] md:rounded-t-[3rem] backdrop-blur-2xl transform rotateX-[25deg] shadow-[0_-30px_70px_rgba(139,92,246,0.3)] overflow-hidden flex flex-col p-4 md:p-8 gap-4 md:gap-6 pointer-events-none">
+              {/* Fake UI Inside */}
+              <div className="flex justify-between items-center opacity-50 border-b border-white/5 pb-4 md:pb-6">
+                 <div className="h-6 md:h-8 w-24 md:w-32 bg-white/10 rounded-lg"></div>
+                 <div className="flex gap-3 md:gap-4">
+                    <div className="h-6 md:h-8 w-6 md:w-8 bg-white/10 rounded-full"></div>
+                    <div className="h-6 md:h-8 w-16 md:w-24 bg-cyan-500/20 rounded-full"></div>
+                 </div>
               </div>
-            ))}
-          </div>
+              <div className="flex gap-4 md:gap-6 opacity-60">
+                 <div className="w-1/3 space-y-4 md:space-y-6">
+                    <div className="h-24 md:h-40 w-full bg-gradient-to-br from-cyan-500/20 to-transparent rounded-[1.5rem] md:rounded-[2rem] border border-cyan-500/30"></div>
+                    <div className="h-24 md:h-40 w-full bg-white/5 rounded-[1.5rem] md:rounded-[2rem] border border-white/10"></div>
+                 </div>
+                 <div className="w-2/3 space-y-4 md:space-y-6">
+                    <div className="h-20 md:h-32 w-full bg-gradient-to-br from-violet-500/20 to-transparent rounded-[1.5rem] md:rounded-[2rem] border border-violet-500/30"></div>
+                    <div className="h-32 md:h-48 w-full bg-white/5 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 flex items-end p-4 md:p-6 gap-2 md:gap-4">
+                        {[40, 70, 45, 90, 65, 100, 80].map((h, i) => (
+                          <div key={i} className="flex-1 bg-gradient-to-t from-cyan-500 to-transparent rounded-t-lg md:rounded-t-xl" style={{height: `${h}%`}}></div>
+                        ))}
+                    </div>
+                 </div>
+              </div>
+           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-24 px-6">
-        <div className="max-w-5xl mx-auto relative overflow-hidden bg-slate-900 dark:bg-slate-100 rounded-3xl p-12 md:p-20 text-center">
-          <div className="relative z-10 space-y-8">
-            <h2 className="text-3xl md:text-5xl font-bold text-white dark:text-slate-900 tracking-tight leading-tight">
-              Your Journey <br/>
-              Starts Today.
+      {/* Marquee Section */}
+      <div className="py-6 md:py-8 border-y border-white/5 bg-[#0a0a0a] flex overflow-hidden whitespace-nowrap relative z-20">
+         <div className="animate-[marquee_20s_linear_infinite] flex gap-12 md:gap-16 items-center">
+            {[...Array(15)].map((_, i) => (
+              <span key={i} className="text-lg md:text-3xl font-black text-white/10 uppercase tracking-widest flex items-center gap-6 md:gap-8">
+                 UBAK PRO <Zap className="text-cyan-500/30" />
+              </span>
+            ))}
+         </div>
+      </div>
+
+      {/* Bento Grid Features Section */}
+      <section className="py-20 md:py-32 px-4 md:px-6 relative z-10 max-w-7xl mx-auto">
+         <div className="mb-16 md:mb-24 text-center">
+            <h2 className="text-4xl md:text-7xl font-black tracking-tighter mb-6">
+              BUILT FOR <br className="hidden sm:block" /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">COMPLETE CONTROL.</span>
             </h2>
-            <p className="text-lg text-slate-400 dark:text-slate-500 max-w-xl mx-auto font-medium">
-              Join thousands of successful users who have mastered their cash flow.
-            </p>
+            <p className="text-slate-400 text-base md:text-xl max-w-3xl mx-auto font-medium">Stop using outdated tools. We built a modern financial management system designed to help you track and grow your wealth effortlessly.</p>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-auto md:auto-rows-[350px]">
+            {/* Large Card */}
+            <div className="md:col-span-2 md:row-span-2 bg-[#0a0a0a] border border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 hover:border-cyan-500/50 transition-colors group relative overflow-hidden flex flex-col justify-between min-h-[400px] md:min-h-0">
+               <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/20 blur-[100px] group-hover:bg-cyan-500/30 transition-all duration-700 pointer-events-none"></div>
+               <div>
+                 <Activity size={40} className="text-cyan-400 mb-6 md:mb-8" />
+                 <h3 className="text-3xl md:text-4xl font-black mb-4">Real-Time Tracking</h3>
+                 <p className="text-slate-400 text-lg md:text-xl max-w-lg font-medium leading-relaxed">Watch your cash flow update instantly. Our fast engine ensures you never miss a detail in your financial journey.</p>
+               </div>
+               
+               {/* Decorative Element */}
+               <div className="absolute bottom-0 right-0 left-8 md:left-12 h-32 md:h-48 flex items-end gap-2 md:gap-3 opacity-40 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                  {[40, 70, 45, 90, 65, 100, 80, 50, 85].map((h, i) => (
+                    <div key={i} className="flex-1 bg-gradient-to-t from-cyan-500 to-transparent rounded-t-xl md:rounded-t-2xl shadow-[0_0_15px_rgba(34,211,238,0.5)]" style={{height: `${h}%`}}></div>
+                  ))}
+               </div>
+            </div>
+
+            {/* Small Card 1 */}
+            <div className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 hover:border-violet-500/50 transition-colors group relative overflow-hidden flex flex-col justify-between min-h-[300px] md:min-h-0">
+               <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-violet-500/20 blur-[80px] group-hover:bg-violet-500/40 transition-all duration-700 pointer-events-none"></div>
+               <ShieldCheck size={32} className="text-violet-400" />
+               <div>
+                 <h3 className="text-2xl md:text-3xl font-black mb-3">Bank-Level Security</h3>
+                 <p className="text-slate-400 text-sm md:text-base font-medium">Your data is encrypted with the highest security standards to keep your information safe.</p>
+               </div>
+            </div>
+
+            {/* Small Card 2 */}
+            <div className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 hover:border-fuchsia-500/50 transition-colors group relative overflow-hidden flex flex-col justify-between min-h-[300px] md:min-h-0">
+               <div className="absolute -left-10 -bottom-10 w-64 h-64 bg-fuchsia-500/20 blur-[80px] group-hover:bg-fuchsia-500/40 transition-all duration-700 pointer-events-none"></div>
+               <Globe size={32} className="text-fuchsia-400" />
+               <div>
+                 <h3 className="text-2xl md:text-3xl font-black mb-3">Access Anywhere</h3>
+                 <p className="text-slate-400 text-sm md:text-base font-medium">Access your dashboard from any device, anywhere in the world, seamlessly.</p>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* Massive CTA */}
+      <section className="py-20 md:py-32 px-4 md:px-6 relative z-20">
+        <div className="max-w-6xl mx-auto bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/10 rounded-[3rem] md:rounded-[4rem] p-12 md:p-32 text-center relative overflow-hidden shadow-[0_0_100px_rgba(139,92,246,0.15)]">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-violet-600/20 via-transparent to-transparent pointer-events-none"></div>
+          <div className="relative z-10 space-y-8 md:space-y-12 flex flex-col items-center">
+            <h2 className="text-4xl md:text-8xl font-black tracking-tighter leading-[0.9]">
+              START YOUR <br className="hidden sm:block" /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">JOURNEY.</span>
+            </h2>
             <Link 
               to="/login" 
-              className="inline-flex items-center gap-2.5 bg-rose-500 text-white font-bold py-4 px-12 rounded-xl shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all hover:scale-105 active:scale-95"
+              className="inline-flex items-center gap-3 bg-white text-black font-black py-4 md:py-6 px-10 md:px-16 rounded-full shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] hover:scale-105 active:scale-95 transition-all text-xl md:text-2xl"
             >
-              Start Free Trial <ArrowRight size={20} />
+              Get Started <ArrowUpRight size={24} />
             </Link>
           </div>
         </div>
       </section>
       
-      <footer className="py-10 border-t border-slate-100 dark:border-slate-800 text-center">
-        <div className="flex items-center justify-center gap-2 mb-4">
-           <ShieldCheck className="text-rose-500" size={18} />
-           <span className="text-base font-bold text-slate-900 dark:text-white">UBAK PRO</span>
+      <footer className="py-16 border-t border-white/5 text-center relative z-10 bg-[#030303]">
+        <div className="flex items-center justify-center gap-3 mb-8">
+           <Zap className="text-cyan-400" size={28} fill="currentColor" />
+           <span className="text-3xl font-black tracking-tighter text-white">UBAK<span className="text-cyan-400">PRO</span></span>
         </div>
-        <p className="text-slate-400 dark:text-slate-600 text-[10px] font-bold uppercase tracking-widest">
+        <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.4em]">
           &copy; 2026 UBAK Pro &bull; Excellence In Finance
         </p>
       </footer>
 
-      {/* Dark Mode Toggle - Bottom Right */}
-      <button
-        onClick={toggleDarkMode}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center active:scale-95 transition-all z-[10000] group"
-      >
-        {isDarkMode ? (
-          <Sun size={20} className="transition-transform" />
-        ) : (
-          <Moon size={20} className="transition-transform" />
-        )}
-      </button>
+      {/* Custom Styles for Marquee & Animations */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+      `}} />
     </div>
   );
 };

@@ -9,7 +9,6 @@ import {
   ChevronRight, 
   ShieldCheck, 
   Crown, 
-  UserCircle,
   User,
   Sun,
   Moon
@@ -29,98 +28,100 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isDarkMode, toggleDarkMo
 
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === '/dashboard') return 'Dashboard';
-    if (path === '/add-transaction') return 'Add Transaction';
-    if (path === '/add-account') return 'Add Account';
-    return 'Overview';
+    if (path === '/dashboard') return 'DASHBOARD';
+    if (path === '/add-transaction') return 'ADD TRANSACTION';
+    if (path === '/add-account') return 'ADD USER';
+    return 'OVERVIEW';
   };
 
   const renderRoleBadge = () => {
     switch (user?.role) {
       case 'Admin':
-        return <span className="bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md text-[10px] font-medium flex items-center gap-1"><ShieldCheck size={12}/> Admin</span>;
+        return <span className="bg-white/5 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-[0_0_10px_rgba(34,211,238,0.2)]"><ShieldCheck size={12}/> Admin</span>;
       case 'VIP':
-        return <span className="bg-purple-50 text-purple-600 border border-purple-100 px-2 py-0.5 rounded-md text-[10px] font-medium flex items-center gap-1"><Crown size={12}/> VIP</span>;
+        return <span className="bg-white/5 text-violet-400 border border-violet-500/30 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-[0_0_10px_rgba(139,92,246,0.2)]"><Crown size={12}/> VIP</span>;
       default:
-        return <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md text-[10px] font-medium flex items-center gap-1"><UserCircle size={12}/> Free</span>;
+        return <span className="bg-white/5 text-slate-400 border border-white/10 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">Standard</span>;
     }
   };
 
   return (
-    <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 z-30 transition-colors duration-300 shrink-0">
+    <nav className="bg-[#030303]/80 backdrop-blur-2xl border-b border-white/5 p-4 md:p-5 sticky top-0 z-30 transition-all duration-300 shrink-0">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-5">
           <button 
             onClick={toggleSidebar}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500 dark:text-slate-400"
+            className="p-2 md:p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all text-slate-400 hover:text-white"
           >
-            <Menu size={20} />
+            <Menu className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
           </button>
           
-          <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
-            <span className="text-[10px] font-semibold uppercase tracking-wider hidden sm:block">Pages</span>
-            <ChevronRight size={12} className="hidden sm:block" />
-            <h1 className="text-base font-semibold text-slate-900 dark:text-white tracking-tight">{getPageTitle()}</h1>
+          <div className="flex items-center gap-2 md:gap-3 text-slate-500 overflow-hidden">
+            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] hidden sm:block shrink-0">System</span>
+            <ChevronRight className="w-[10px] h-[10px] md:w-[12px] md:h-[12px] hidden sm:block opacity-30 shrink-0" />
+            <h1 className="text-[10px] md:text-sm font-black text-white tracking-[0.1em] uppercase truncate max-w-[120px] md:max-w-none">{getPageTitle()}</h1>
           </div>
         </div>
         
-        <div className="hidden lg:flex flex-1 max-w-md mx-8">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+        <div className="hidden lg:flex flex-1 max-w-lg mx-12">
+          <div className="relative w-full group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors" size={16} />
             <input 
               type="text" 
-              placeholder="Search everything..." 
-              className="w-full bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700 rounded-lg py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:bg-white dark:focus:bg-slate-800 transition-all dark:text-white"
+              placeholder="SEARCH..." 
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-2.5 pl-12 pr-4 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-cyan-500/50 focus:bg-white/10 transition-all text-white placeholder:text-slate-600 uppercase tracking-widest"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-4">
           <button 
             onClick={toggleDarkMode}
-            className="p-2 text-slate-400 hover:text-rose-500 transition-colors relative"
+            className="p-2 md:p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all text-slate-400 hover:text-cyan-400"
             aria-label="Toggle dark mode"
           >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            {isDarkMode ? <Sun className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" /> : <Moon className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />}
           </button>
 
-          <button className="p-2 text-slate-400 hover:text-rose-500 transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white dark:border-slate-900" />
+          <button className="p-2 md:p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all text-slate-400 hover:text-cyan-400 relative">
+            <Bell className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
+            <span className="absolute top-2 md:top-2.5 right-2 md:right-2.5 w-1.5 md:w-2 h-1.5 md:h-2 bg-cyan-400 rounded-full border-2 border-[#030303] shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
           </button>
           
-          <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+          <div className="h-6 md:h-8 w-px bg-white/5 mx-1 md:mx-2" />
           
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end leading-none hidden xs:flex">
-              <span className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{user?.username}</span>
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex flex-col items-end leading-none hidden md:flex">
+              <span className="text-xs font-black text-white mb-1.5 uppercase tracking-wider">{user?.username}</span>
               {renderRoleBadge()}
             </div>
             
             <div className="group relative">
-              <div className="w-9 h-9 rounded-lg bg-rose-100 dark:bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400 font-semibold cursor-pointer border border-rose-200/50 dark:border-rose-500/20">
+              <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center text-cyan-400 font-black cursor-pointer border border-white/10 hover:border-cyan-500/50 transition-all shadow-[0_0_15px_rgba(34,211,238,0.1)]">
                 {user?.username?.charAt(0).toUpperCase()}
               </div>
               
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
-                <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
-                  <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Signed in as</p>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.username}</p>
+              <div className="absolute right-0 mt-3 w-48 md:w-56 bg-[#0a0a0a] border border-white/10 rounded-[1.5rem] shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden backdrop-blur-3xl">
+                <div className="p-4 md:p-5 border-b border-white/5 bg-white/5">
+                  <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1 md:mb-2">Logged in as</p>
+                  <p className="text-xs md:text-sm font-black text-white truncate uppercase tracking-widest">{user?.username}</p>
                 </div>
-                <Link 
-                  to="/profile"
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-rose-500 transition-all border-b border-slate-50 dark:border-slate-700"
-                >
-                  <User size={18} />
-                  My Profile
-                </Link>
-                <button 
-                  onClick={() => { logout(); navigate('/'); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-rose-500 transition-all"
-                >
-                  <LogOut size={18} />
-                  Sign Out
-                </button>
+                <div className="p-2">
+                  <Link 
+                    to="/profile"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 hover:text-cyan-400 transition-all rounded-xl"
+                  >
+                    <User className="w-[14px] h-[14px] md:w-[16px] md:h-[16px]" />
+                    Profile Settings
+                  </Link>
+                  <button 
+                    onClick={() => { logout(); navigate('/'); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 transition-all rounded-xl"
+                  >
+                    <LogOut className="w-[14px] h-[14px] md:w-[16px] md:h-[16px]" />
+                    Logout
+                  </button>
+                </div>
               </div>
             </div>
           </div>

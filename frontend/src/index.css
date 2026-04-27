@@ -20,11 +20,11 @@ body {
   display: block; 
   min-width: 320px;
   min-height: 100vh;
-  @apply bg-slate-50 text-slate-800 transition-colors duration-300;
+  @apply bg-slate-50 text-slate-900 transition-colors duration-500;
 }
 
 body.dark {
-  @apply bg-slate-950 text-slate-100;
+  @apply bg-slate-950 text-slate-200;
 }
 
 #root {
@@ -36,7 +36,7 @@ html {
 }
 
 ::selection {
-  @apply bg-rose-200/50 text-rose-900;
+  @apply bg-rose-500/10 text-rose-600;
 }
 
 /* --- Theme Transition Effects --- */
@@ -61,11 +61,11 @@ html {
 }
 
 .animate-reveal {
-  animation: circle-reveal 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: circle-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Ensure common elements transition smoothly */
 div, nav, aside, main, button {
   transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 300ms;
+  transition-duration: 200ms;
 }

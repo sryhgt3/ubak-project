@@ -61,32 +61,32 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       }`}
     >
       {/* Header Section */}
-      <div className="flex items-center h-[73px] border-b border-slate-50 dark:border-slate-800 px-5 shrink-0 overflow-hidden">
-        <div className="w-10 h-10 min-w-[40px] bg-gradient-to-br from-rose-500 to-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-500/20 shrink-0">
-          <ShieldCheck size={24} />
+      <div className="flex items-center h-[73px] border-b border-slate-100 dark:border-slate-800 px-5 shrink-0 overflow-hidden">
+        <div className="w-10 h-10 min-w-[40px] bg-rose-500 rounded-xl flex items-center justify-center text-white shrink-0">
+          <ShieldCheck size={22} />
         </div>
         <div className={`ml-3 transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
+          <span className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
             UBAK <span className="text-rose-500">PRO</span>
           </span>
         </div>
       </div>
 
       {/* Navigation Section */}
-      <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto overflow-x-hidden">
         {filteredMenu.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center h-12 px-3 rounded-xl text-sm font-bold transition-all duration-300 relative group ${
+              `flex items-center h-10 px-3 rounded-lg text-sm font-medium transition-all duration-200 relative group ${
                 isActive
-                  ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-500 shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
               } ${!isOpen && 'md:justify-center'}`
             }
           >
-            <div className="shrink-0 transition-transform duration-300 group-hover:scale-110">
+            <div className="shrink-0 transition-colors duration-200">
               {item.icon}
             </div>
             

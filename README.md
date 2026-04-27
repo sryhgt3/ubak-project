@@ -59,7 +59,7 @@ docker-compose up -d --build
 ```
 
 Aplikasi akan tersedia di:
-- **Frontend**: `http://localhost:5173`
+- **Frontend**: `http://localhost` (Docker) atau `http://localhost:5173` (Manual)
 - **Backend API**: `http://localhost:8800`
 - **API Documentation**: `http://localhost:8800/docs`
 - **pgAdmin**: `http://localhost:5050`
@@ -70,6 +70,7 @@ Aplikasi akan tersedia di:
 ```bash
 cd backend
 cp .env.example .env  # Buat file .env dari template
+# Update DATABASE_URL di .env jika diperlukan
 python -m venv venv
 source venv/bin/activate  # atau venv\Scripts\activate di Windows
 pip install -r requirements.txt
@@ -79,6 +80,7 @@ uvicorn main:app --reload --port 8800
 #### 2. Frontend
 ```bash
 cd frontend
+cp .env.example .env  # Buat file .env dari template
 npm install
 npm run dev
 ```

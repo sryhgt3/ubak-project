@@ -60,71 +60,71 @@ const InflowPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700 pb-24 px-4 sm:px-0">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-24 px-4 sm:px-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500 hover:text-rose-500 transition-all shadow-sm"
+            className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Inflow Details <span className="text-emerald-500">.</span>
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+              Inflow Details<span className="text-emerald-500">.</span>
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">History of all incoming money</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">History of all incoming money</p>
           </div>
         </div>
 
         <div className="relative group w-full md:w-80">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-rose-500">
-            <Search size={18} />
+            <Search size={16} />
           </span>
           <input 
             type="text"
             placeholder="Search categories..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-rose-500 outline-none transition-all font-medium dark:text-white shadow-sm"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl py-2 pl-12 pr-4 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all text-sm font-medium dark:text-white shadow-sm"
           />
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-slate-50 dark:border-slate-800/50">
-                <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest">Category</th>
-                <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest">Description</th>
-                <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
-                <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
+              <tr className="border-b border-slate-100 dark:border-slate-800">
+                <th className="px-8 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Category</th>
+                <th className="px-8 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Description</th>
+                <th className="px-8 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Date</th>
+                <th className="px-8 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
               {filteredTransactions.length > 0 ? filteredTransactions.map((t) => (
                 <tr key={t.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-lg flex items-center justify-center font-semibold text-sm border border-emerald-100 dark:border-emerald-500/20">
                         {t.category.charAt(0)}
                       </div>
-                      <span className="font-bold text-slate-900 dark:text-white">{t.category}</span>
+                      <span className="font-semibold text-sm text-slate-900 dark:text-white">{t.category}</span>
                     </div>
                   </td>
-                  <td className="px-8 py-6">
-                    <span className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">{t.description || '-'}</span>
+                  <td className="px-8 py-5">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium italic">{t.description || '-'}</span>
                   </td>
-                  <td className="px-8 py-6 text-right">
-                    <span className="text-sm text-slate-500 dark:text-slate-400 font-bold uppercase">
+                  <td className="px-8 py-5 text-right">
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
                       {new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </span>
                   </td>
-                  <td className="px-8 py-6 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
                       <ArrowUpCircle size={14} className="text-emerald-500" />
-                      <span className="font-black text-emerald-600">{formatCurrency(t.amount)}</span>
+                      <span className="font-semibold text-sm text-emerald-600">{formatCurrency(t.amount)}</span>
                     </div>
                   </td>
                 </tr>
@@ -132,10 +132,10 @@ const InflowPage: React.FC = () => {
                 <tr>
                   <td colSpan={4} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300">
-                        <TrendingUp size={32} />
+                      <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300">
+                        <TrendingUp size={24} />
                       </div>
-                      <p className="text-slate-400 font-medium italic">No inflow transactions found.</p>
+                      <p className="text-slate-400 text-sm font-medium italic">No inflow transactions found.</p>
                     </div>
                   </td>
                 </tr>

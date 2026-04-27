@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import SetupModal from './SetupModal';
+import Chatbot from './Chatbot';
 import { Sun, Moon } from 'lucide-react';
 
 const Layout: React.FC = () => {
@@ -64,7 +65,7 @@ const Layout: React.FC = () => {
   }, [location]);
 
   return (
-    <div className="flex min-h-screen bg-white dark:bg-slate-950 relative transition-colors duration-500">
+    <div className="flex h-screen bg-white dark:bg-slate-950 relative transition-colors duration-500 overflow-hidden">
       {/* Animation Overlay - Using targetTheme to prevent color flip mid-animation */}
       {isAnimating && (
         <div 
@@ -82,27 +83,19 @@ const Layout: React.FC = () => {
 
       <Sidebar isOpen={isSidebarOpen} />
       <SetupModal />
+      <Chatbot />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Navbar toggleSidebar={toggleSidebar} />
+        <Navbar 
+          toggleSidebar={toggleSidebar} 
+          isDarkMode={isDarkMode} 
+          toggleDarkMode={toggleDarkMode} 
+        />
         
         <main className="flex-1 overflow-y-auto relative">
           <div className="p-4 md:p-8 max-w-full">
             <Outlet />
           </div>
-
-          {/* Dark Mode Toggle - Bottom Right */}
-          <button
-            ref={buttonRef}
-            onClick={toggleDarkMode}
-            className="fixed bottom-8 right-8 w-14 h-14 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[10000] group"
-          >
-            {isDarkMode ? (
-              <Sun size={24} className="group-hover:rotate-45 transition-transform" />
-            ) : (
-              <Moon size={24} className="group-hover:-rotate-12 transition-transform" />
-            )}
-          </button>
         </main>
       </div>
     </div>

@@ -97,9 +97,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             
             {/* Tooltip for collapsed state */}
             {!isOpen && (
-              <div className="absolute left-full ml-4 px-3 py-2 bg-[#0a0a0a] text-white text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 hidden md:block shadow-2xl border border-white/10">
+              <div className="absolute left-full ml-4 px-3 py-2 bg-slate-900 dark:bg-white text-white dark:text-black text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 hidden md:block shadow-xl">
                 {item.name}
-                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-[#0a0a0a] rotate-45 border-l border-b border-white/10" />
+                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 dark:bg-white rotate-45" />
               </div>
             )}
           </NavLink>
@@ -108,14 +108,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       
       {/* Sidebar Footer Indicator */}
       {isOpen && (
-        <div className="p-4 border-t border-white/5 bg-[#0a0a0a]">
-           <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-              <div className="flex items-center gap-2 mb-2 text-cyan-400">
+        <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-white dark:bg-[#0a0a0a]">
+           <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-2 mb-2 text-cyan-600 dark:text-cyan-400">
                  <Activity size={12} />
                  <span className="text-[10px] font-black uppercase tracking-tighter">System Health</span>
               </div>
-              <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
-                 <div className="bg-cyan-400 w-full h-full"></div>
+              <div className="w-full bg-slate-200 dark:bg-white/10 h-1 rounded-full overflow-hidden">
+                 <div className="bg-cyan-500 dark:bg-cyan-400 w-full h-full"></div>
               </div>
            </div>
         </div>

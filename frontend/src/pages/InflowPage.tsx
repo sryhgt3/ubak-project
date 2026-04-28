@@ -36,9 +36,6 @@ const InflowPage: React.FC = () => {
     };
 
     if (token) fetchTransactions();
-    
-    document.documentElement.classList.add('dark');
-    document.body.classList.add('dark');
   }, [token, navigate, logout]);
 
   const formatCurrency = (amount: number) => {
@@ -56,7 +53,7 @@ const InflowPage: React.FC = () => {
 
   if (isLoading || isFetching) {
     return (
-      <div className="h-[60vh] flex items-center justify-center bg-[#030303]">
+      <div className="h-[60vh] flex items-center justify-center bg-white dark:bg-[#030303]">
         <div className="relative">
           <div className="w-16 h-16 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin" />
           <Zap className="absolute inset-0 m-auto text-cyan-400 animate-pulse" size={24} fill="currentColor" />
@@ -66,33 +63,33 @@ const InflowPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-1000 pb-24 md:pb-32 px-4 sm:px-0 text-white selection:bg-cyan-500/30">
+    <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-1000 pb-24 md:pb-32 px-4 sm:px-0 text-slate-800 dark:text-white selection:bg-cyan-500/10 selection:text-cyan-700 dark:selection:text-cyan-200">
       
       {/* Background Ambient Effects */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden bg-[#030303]">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-cyan-600/10 blur-[150px] rounded-full mix-blend-screen" />
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden bg-slate-50 dark:bg-[#030303]">
+        <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[60%] bg-cyan-200/50 dark:bg-cyan-600/10 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-screen" />
       </div>
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-20 pt-4 md:pt-8">
         <div className="flex items-center gap-4 md:gap-6">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="p-3 md:p-3.5 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all shadow-2xl shrink-0"
+            className="p-3 md:p-3.5 rounded-xl md:rounded-2xl bg-white/70 backdrop-blur-xl dark:bg-white/5 border border-white/50 dark:border-white/10 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/10 transition-all shadow-sm dark:shadow-2xl shrink-0"
           >
             <ArrowLeft className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
           </button>
           <div className="space-y-1 md:space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[8px] md:text-[10px] font-bold tracking-widest uppercase w-fit">
+            <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-[8px] md:text-[10px] font-bold tracking-widest uppercase shadow-sm dark:shadow-none w-fit">
               Account History
             </div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none uppercase">
-              Income Log<span className="text-cyan-400">.</span>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none uppercase text-slate-900 dark:text-white">
+              Income Log<span className="text-cyan-600">.</span>
             </h1>
           </div>
         </div>
 
         <div className="relative group w-full md:w-96">
-          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-600 transition-colors">
             <Search className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" />
           </span>
           <input 
@@ -100,45 +97,45 @@ const InflowPage: React.FC = () => {
             placeholder="SEARCH TRANSACTIONS..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-6 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all text-[10px] md:text-xs font-black tracking-widest uppercase placeholder:text-slate-600 dark:text-white shadow-2xl backdrop-blur-md"
+            className="w-full bg-white/80 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-6 focus:ring-1 focus:ring-cyan-500/30 outline-none transition-all text-[10px] md:text-xs font-black tracking-widest uppercase placeholder:text-slate-400 dark:placeholder:text-slate-600 text-slate-800 dark:text-white shadow-sm dark:shadow-2xl backdrop-blur-md"
           />
         </div>
       </div>
 
-      <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3)] relative z-20">
+      <div className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border border-white/50 dark:border-white/10 rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl relative z-20">
         <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full text-left border-collapse min-w-[700px] md:min-w-full">
             <thead>
-              <tr className="border-b border-white/5 bg-white/5">
-                <th className="px-6 md:px-10 py-5 md:py-6 text-[8px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Category</th>
-                <th className="px-6 md:px-10 py-5 md:py-6 text-[8px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Description</th>
-                <th className="px-6 md:px-10 py-5 md:py-6 text-[8px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] text-right">Date</th>
-                <th className="px-6 md:px-10 py-5 md:py-6 text-[8px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] text-right">Amount</th>
+              <tr className="border-b border-slate-100/50 dark:border-white/5 bg-white/30 dark:bg-white/5">
+                <th className="px-6 md:px-10 py-5 md:py-6 text-[8px] md:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Category</th>
+                <th className="px-6 md:px-10 py-5 md:py-6 text-[8px] md:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Description</th>
+                <th className="px-6 md:px-10 py-5 md:py-6 text-[8px] md:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] text-right">Date</th>
+                <th className="px-6 md:px-10 py-5 md:py-6 text-[8px] md:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] text-right">Amount</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-slate-100/50 dark:divide-white/5">
               {filteredTransactions.length > 0 ? filteredTransactions.map((t) => (
-                <tr key={t.id} className="group hover:bg-white/[0.03] transition-all cursor-pointer">
+                <tr key={t.id} className="group hover:bg-white/50 dark:hover:bg-white/[0.03] transition-all cursor-pointer">
                   <td className="px-6 md:px-10 py-5 md:py-6">
                     <div className="flex items-center gap-3 md:gap-5">
-                      <div className="w-10 md:w-12 h-10 md:h-12 bg-cyan-500/10 text-cyan-400 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-base md:text-lg border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.1)] group-hover:scale-110 transition-transform shrink-0">
+                      <div className="w-10 md:w-12 h-10 md:h-12 bg-cyan-500/5 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-base md:text-lg border border-cyan-500/10 shadow-sm dark:shadow-[0_0_15px_rgba(34,211,238,0.1)] group-hover:scale-110 transition-transform shrink-0">
                         {t.category.charAt(0)}
                       </div>
-                      <span className="font-black text-xs md:text-sm text-white tracking-tight uppercase truncate">{t.category}</span>
+                      <span className="font-black text-xs md:text-sm text-slate-800 dark:text-white tracking-tight uppercase truncate">{t.category}</span>
                     </div>
                   </td>
                   <td className="px-6 md:px-10 py-5 md:py-6">
-                    <span className="text-[10px] md:text-xs text-slate-400 font-medium tracking-tight truncate max-w-[200px] block">{t.description || 'N/A'}</span>
+                    <span className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-medium tracking-tight truncate max-w-[200px] block">{t.description || 'N/A'}</span>
                   </td>
                   <td className="px-6 md:px-10 py-5 md:py-6 text-right">
-                    <span className="text-[8px] md:text-[10px] text-slate-500 font-black uppercase tracking-widest whitespace-nowrap">
+                    <span className="text-[8px] md:text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest whitespace-nowrap">
                       {new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </span>
                   </td>
                   <td className="px-6 md:px-10 py-5 md:py-6 text-right">
                     <div className="flex items-center justify-end gap-2 md:gap-2.5">
-                      <ArrowUpRight className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] text-cyan-400 shrink-0" />
-                      <span className="font-black text-sm md:text-lg text-cyan-400 tracking-tighter whitespace-nowrap">{formatCurrency(t.amount)}</span>
+                      <ArrowUpRight className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] text-cyan-600 dark:text-cyan-400 shrink-0" />
+                      <span className="font-black text-sm md:text-lg text-cyan-600 dark:text-cyan-400 tracking-tighter whitespace-nowrap">{formatCurrency(t.amount)}</span>
                     </div>
                   </td>
                 </tr>
@@ -146,10 +143,10 @@ const InflowPage: React.FC = () => {
                 <tr>
                   <td colSpan={4} className="px-6 md:px-10 py-20 md:py-24 text-center">
                     <div className="flex flex-col items-center gap-4 md:gap-6">
-                      <div className="w-16 md:w-20 h-16 md:h-20 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-slate-600 animate-pulse">
+                      <div className="w-16 md:w-20 h-16 md:h-20 bg-slate-100/50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 animate-pulse">
                         <TrendingUp className="w-[28px] h-[28px] md:w-[32px] md:h-[32px]" />
                       </div>
-                      <p className="text-slate-500 text-[10px] font-black tracking-[0.4em] uppercase">No data available</p>
+                      <p className="text-slate-400 text-[10px] font-black tracking-[0.4em] uppercase">No data available</p>
                     </div>
                   </td>
                 </tr>

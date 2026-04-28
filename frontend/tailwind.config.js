@@ -7,6 +7,14 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      colors: {
+        brand: {
+          primary: '#06b6d4', // cyan-500
+          secondary: '#8b5cf6', // violet-500
+          dark: '#030303',
+          surface: '#0a0a0a',
+        }
+      },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',

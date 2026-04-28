@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { Toaster } from 'sonner';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -14,6 +15,7 @@ import Layout from './components/Layout';
 const App: React.FC = () => {
   return (
     <AuthProvider>
+      <Toaster richColors position="top-right" theme="system" />
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />

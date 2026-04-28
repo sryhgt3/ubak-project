@@ -28,8 +28,7 @@ const ProfilePage: React.FC = () => {
   });
 
   useEffect(() => {
-    document.documentElement.classList.add('dark');
-    document.body.classList.add('dark');
+    // Component mounted
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -57,18 +56,18 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-1000 pb-24 md:pb-32 px-4 sm:px-0 text-white selection:bg-cyan-500/30">
+    <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-1000 pb-24 md:pb-32 px-4 sm:px-0 text-slate-900 dark:text-white selection:bg-cyan-500/30">
       {/* Background Ambient Effect */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden bg-[#030303]">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-violet-600/10 blur-[150px] rounded-full mix-blend-screen" />
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden bg-slate-50 dark:bg-[#030303]">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-violet-600/5 dark:bg-violet-600/10 blur-[150px] rounded-full mix-blend-multiply dark:mix-blend-screen" />
       </div>
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-20 pt-4 md:pt-8">
         <div className="space-y-2 md:space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[8px] md:text-[10px] font-bold tracking-widest uppercase w-fit">
+          <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 text-[8px] md:text-[10px] font-bold tracking-widest uppercase w-fit">
             <User size={12} /> Account Info
           </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none uppercase">
+          <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none uppercase text-slate-900 dark:text-white">
             Profile Settings<span className="text-violet-400">.</span>
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-sm font-medium">Manage your account details and financial goals.</p>
@@ -78,8 +77,8 @@ const ProfilePage: React.FC = () => {
       {message.text && (
         <div className={`p-4 rounded-2xl flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-widest relative z-20 ${
           message.type === 'success' 
-            ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.1)]' 
-            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]'
+            ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shadow-sm dark:shadow-[0_0_15px_rgba(34,211,238,0.1)]' 
+            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shadow-sm dark:shadow-[0_0_15px_rgba(244,63,94,0.1)]'
         }`}>
           {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           {message.text}
@@ -88,11 +87,11 @@ const ProfilePage: React.FC = () => {
 
       <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20">
         {/* Account Info */}
-        <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-8 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl space-y-6 md:space-y-8 relative overflow-hidden group hover:border-violet-500/30 transition-colors">
-          <div className="absolute -right-10 -top-10 w-32 h-32 bg-violet-500/10 blur-2xl rounded-full pointer-events-none group-hover:bg-violet-500/20 transition-colors"></div>
+        <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-8 rounded-[2.5rem] md:rounded-[3rem] shadow-xl dark:shadow-2xl space-y-6 md:space-y-8 relative overflow-hidden group hover:border-violet-500/30 transition-colors">
+          <div className="absolute -right-10 -top-10 w-32 h-32 bg-violet-500/5 dark:bg-violet-500/10 blur-2xl rounded-full pointer-events-none group-hover:bg-violet-500/20 transition-colors"></div>
           
           <div className="flex items-center gap-3 text-slate-900 dark:text-white font-black text-[10px] md:text-xs uppercase tracking-widest relative z-10">
-            <div className="w-10 h-10 bg-violet-500/10 text-violet-400 rounded-xl flex items-center justify-center border border-violet-500/20">
+            <div className="w-10 h-10 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center border border-violet-500/20">
               <Activity size={18} />
             </div>
             Base Information
@@ -101,33 +100,33 @@ const ProfilePage: React.FC = () => {
           <div className="space-y-3 relative z-10">
             <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Username</label>
             <div className="relative group/input">
-               <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-violet-400 transition-colors">
+               <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-violet-500 transition-colors">
                  <Zap className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" fill="currentColor" />
                </span>
                <input 
                 type="text" 
                 value={formData.username}
                 onChange={e => setFormData({...formData, username: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-4 focus:ring-1 focus:ring-violet-500/50 outline-none transition-all font-bold text-xs uppercase tracking-widest text-white placeholder:text-slate-700"
+                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-4 focus:ring-1 focus:ring-violet-500/50 outline-none transition-all font-bold text-xs uppercase tracking-widest text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 shadow-sm"
               />
             </div>
           </div>
 
           <div className="pt-4 relative z-10">
-            <div className="bg-white/5 p-5 rounded-2xl md:rounded-3xl border border-white/10">
+            <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm">
               <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] block mb-2">Account Role</span>
-              <span className="text-white font-black text-base md:text-lg tracking-tight uppercase">{user?.role} LEVEL</span>
+              <span className="text-slate-900 dark:text-white font-black text-base md:text-lg tracking-tight uppercase">{user?.role} LEVEL</span>
             </div>
           </div>
         </div>
 
         {/* Financial Goals */}
         {user?.role !== 'Admin' && (
-          <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-8 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl space-y-6 md:space-y-8 relative overflow-hidden group hover:border-cyan-500/30 transition-colors">
-            <div className="absolute -right-10 -top-10 w-32 h-32 bg-cyan-500/10 blur-2xl rounded-full pointer-events-none group-hover:bg-cyan-500/20 transition-colors"></div>
+          <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-8 rounded-[2.5rem] md:rounded-[3rem] shadow-xl dark:shadow-2xl space-y-6 md:space-y-8 relative overflow-hidden group hover:border-cyan-500/30 transition-colors">
+            <div className="absolute -right-10 -top-10 w-32 h-32 bg-cyan-500/5 dark:bg-cyan-500/10 blur-2xl rounded-full pointer-events-none group-hover:bg-cyan-500/20 transition-colors"></div>
             
             <div className="flex items-center gap-3 text-slate-900 dark:text-white font-black text-[10px] md:text-xs uppercase tracking-widest relative z-10">
-              <div className="w-10 h-10 bg-cyan-500/10 text-cyan-400 rounded-xl flex items-center justify-center border border-cyan-500/20">
+              <div className="w-10 h-10 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-xl flex items-center justify-center border border-cyan-500/20">
                 <Target size={18} />
               </div>
               Financial Settings
@@ -143,7 +142,7 @@ const ProfilePage: React.FC = () => {
                   inputMode="numeric"
                   value={formData.monthly_income}
                   onChange={e => setFormData({...formData, monthly_income: e.target.value.replace(/[^0-9]/g, '')})}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-white"
+                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
 
@@ -155,7 +154,7 @@ const ProfilePage: React.FC = () => {
                   type="text" 
                   value={formData.savings_goal}
                   onChange={e => setFormData({...formData, savings_goal: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-white uppercase tracking-widest"
+                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white uppercase tracking-widest shadow-sm"
                 />
               </div>
 
@@ -167,7 +166,7 @@ const ProfilePage: React.FC = () => {
                   type="text" 
                   value={formData.dream_item}
                   onChange={e => setFormData({...formData, dream_item: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-white uppercase tracking-widest"
+                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white uppercase tracking-widest shadow-sm"
                 />
               </div>
 
@@ -180,7 +179,7 @@ const ProfilePage: React.FC = () => {
                   inputMode="numeric"
                   value={formData.max_spending}
                   onChange={e => setFormData({...formData, max_spending: e.target.value.replace(/[^0-9]/g, '')})}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-white"
+                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
             </div>
@@ -191,7 +190,7 @@ const ProfilePage: React.FC = () => {
           <button 
             type="submit"
             disabled={isSaving}
-            className="w-full md:w-auto bg-white text-black px-10 md:px-12 py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] font-black text-[11px] md:text-sm uppercase tracking-[0.3em] shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_50px_rgba(255,255,255,0.4)] hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+            className="w-full md:w-auto bg-slate-900 dark:bg-white text-white dark:text-black px-10 md:px-12 py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] font-black text-[11px] md:text-sm uppercase tracking-[0.3em] shadow-lg dark:shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-xl dark:hover:shadow-[0_0_50px_rgba(255,255,255,0.4)] hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
           >
             {isSaving ? (
               <Loader2 className="animate-spin" size={18} />

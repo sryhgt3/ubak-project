@@ -63,7 +63,7 @@ const Layout: React.FC = () => {
   }, [location]);
 
   return (
-    <div className="flex h-screen bg-white dark:bg-slate-950 relative transition-colors duration-500 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 relative transition-colors duration-500 overflow-hidden">
       {/* Animation Overlay - Using targetTheme to prevent color flip mid-animation */}
       {isAnimating && (
         <div 

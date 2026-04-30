@@ -103,7 +103,8 @@ const OutflowPage: React.FC = () => {
       </div>
 
       <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-xl dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] relative z-20">
-        <div className="overflow-x-auto scrollbar-hide">
+        {/* Desktop Table */}
+        <div className="overflow-x-auto scrollbar-hide hidden md:block">
           <table className="w-full text-left border-collapse min-w-[700px] md:min-w-full">
             <thead>
               <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
@@ -153,6 +154,38 @@ const OutflowPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-4 p-4 sm:p-6">
+          {filteredTransactions.length > 0 ? filteredTransactions.map((t) => (
+            <div key={t.id} className="bg-white/90 dark:bg-white/[0.03] p-4 rounded-2xl flex justify-between items-center border border-slate-200 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-4 overflow-hidden">
+                <div className="w-10 h-10 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center font-black text-base border border-violet-500/10 shrink-0">
+                  {t.category.charAt(0)}
+                </div>
+                <div className="truncate">
+                  <h4 className="font-black text-sm text-slate-900 dark:text-white uppercase truncate">{t.category}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{t.description || 'N/A'}</p>
+                </div>
+              </div>
+              <div className="text-right shrink-0 ml-4">
+                <p className="font-black text-base text-violet-600 dark:text-violet-400 whitespace-nowrap">{formatCurrency(t.amount)}</p>
+                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase whitespace-nowrap">
+                  {new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                </p>
+              </div>
+            </div>
+          )) : (
+            <div className="py-20 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-600">
+                  <TrendingUp className="w-7 h-7" />
+                </div>
+                <p className="text-slate-500 text-[10px] font-black tracking-[0.4em] uppercase">No data available</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

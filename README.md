@@ -50,40 +50,56 @@ Sistem akses yang aman dengan tiga level pengguna:
 
 ## 🚀 Cara Menjalankan Project
 
-### Menggunakan Docker (Rekomendasi)
+This project can be run in two modes: **Production** (fully containerized) and **Development** (hybrid).
 
-Hanya satu perintah untuk menjalankan seluruh ekosistem:
+### 1. Production Mode
 
-```bash
-docker-compose up -d --build
-```
+This mode is recommended for deployment or for running the application as a complete, self-contained unit. It builds the frontend into static files and serves everything via Docker.
 
-Aplikasi akan tersedia di:
-- **Frontend**: `http://localhost` (Docker) atau `http://localhost:5173` (Manual)
-- **Backend API**: `http://localhost:8800`
-- **API Documentation**: `http://localhost:8800/docs`
+**Steps:**
+1.  Run the main Docker Compose command:
+    ```bash
+    docker-compose -f docker-compose-prod.yml up -d --build
+    ```
+2.  (First time only) Seed the database to create default user accounts:
+    ```bash
+    docker exec -it ubak_backend python seed_db.py
+    ```
+
+**Endpoints:**
+- **Application**: `http://localhost:3001`
+- **Backend API Docs**: `http://localhost:8800/docs`
 - **pgAdmin**: `http://localhost:5050`
 
-### Menjalankan Manual
 
-#### 1. Backend
-```bash
-cd backend
-cp .env.example .env  # Buat file .env dari template
-# Update DATABASE_URL di .env jika diperlukan
-python -m venv venv
-source venv/bin/activate  # atau venv\Scripts\activate di Windows
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8800
-```
+### 2. Development Mode
 
-#### 2. Frontend
-```bash
-cd frontend
-cp .env.example .env  # Buat file .env dari template
-npm install
-npm run dev
-```
+This mode is recommended for active development on the frontend. The frontend runs on your local machine with hot-reloading, while the backend and database run in Docker.
+
+**Steps:**
+1.  **Create Frontend Environment File:** Create a file named `.env` inside the `frontend` directory (`frontend/.env`) with the following content:
+    ```
+    VITE_API_URL=http://localhost:8800
+    ```
+2.  **Start Backend Services:** In your project's root directory, run the development Docker Compose file in detached mode:
+    ```bash
+    docker-compose up -d
+    ```
+3.  **(First time only) Seed the database to create default user accounts:**
+    ```bash
+    docker exec -it ubak_backend_dev python seed_db.py
+    ```
+4.  **Start Frontend Service:** In a **separate terminal**, navigate to the `frontend` directory and start the dev server:
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+
+**Endpoints:**
+- **Application (Dev)**: `http://localhost:3001` (as configured in `vite.config.ts`)
+- **Backend API Docs**: `http://localhost:8800/docs`
+- **pgAdmin**: `http://localhost:5050`
 
 ---
 

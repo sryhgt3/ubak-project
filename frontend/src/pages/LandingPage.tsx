@@ -6,82 +6,30 @@ import {
   Zap, 
   Sparkles,
   Activity,
-  Globe,
-  Sun,
-  Moon
+  Globe
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    // Default to dark for landing if not set
-    return saved === 'dark' || !saved;
-  });
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [targetTheme, setTargetTheme] = useState<'light' | 'dark' | null>(null);
-
-  // Sync theme with document
+  // Force dark mode
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
-  const toggleDarkMode = (event: React.MouseEvent) => {
-    if (isAnimating) return;
-
-    const x = event.clientX;
-    const y = event.clientY;
-    const nextIsDark = !isDarkMode;
-
-    // Set coordinates for CSS animation from index.css
-    document.documentElement.style.setProperty('--x', `${x}px`);
-    document.documentElement.style.setProperty('--y', `${y}px`);
-
-    setTargetTheme(nextIsDark ? 'dark' : 'light');
-    setIsAnimating(true);
-    
-    setTimeout(() => {
-      setIsDarkMode(nextIsDark);
-    }, 400);
-
-    setTimeout(() => {
-      setIsAnimating(false);
-      setTargetTheme(null);
-    }, 800);
-  };
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#030303] text-slate-800 dark:text-white selection:bg-cyan-500/10 selection:text-cyan-700 dark:selection:text-cyan-200 overflow-x-hidden font-sans transition-colors duration-500">
+    <div className="min-h-screen bg-[#030303] text-white selection:bg-cyan-500/10 selection:text-cyan-200 overflow-x-hidden font-sans">
       
-      {/* Theme Transition Overlay */}
-      {isAnimating && (
-        <div 
-          className={`theme-transition-overlay animate-reveal ${targetTheme === 'dark' ? 'bg-[#030303]' : 'bg-slate-50'}`}
-        />
-      )}
+      
 
       {/* Ambient Background Glows */}
       <div className="fixed top-[-10%] left-[-10%] w-[70%] h-[60%] bg-violet-200/50 dark:bg-violet-600/20 blur-[120px] rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
       <div className="fixed bottom-[-10%] right-[-10%] w-[70%] h-[60%] bg-cyan-200/50 dark:bg-cyan-600/10 blur-[120px] rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
 
-      {/* Floating Dark Mode Toggle */}
-      <button
-        onClick={toggleDarkMode}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-white/70 backdrop-blur-xl dark:bg-white text-slate-900 dark:text-black rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center justify-center active:scale-95 transition-all z-[100] hover:scale-105 border border-white/50 dark:border-transparent"
-        aria-label="Toggle dark mode"
-      >
-        {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
-      </button>
+      
 
       {/* Floating Navigation */}
-      <nav className="fixed top-0 w-full p-6 flex justify-between items-center z-50 backdrop-blur-xl border-b border-white/40 dark:border-white/5 bg-white/40 dark:bg-[#030303]/50">
+      <nav className="fixed top-0 w-full p-6 flex justify-between items-center z-50 backdrop-blur-xl border-b border-white/5 bg-[#030303]/50">
         <div className="flex items-center gap-3 group cursor-pointer">
           <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg dark:shadow-[0_0_20px_rgba(34,211,238,0.4)]">
             <Zap size={20} fill="currentColor" />
@@ -124,10 +72,10 @@ const LandingPage: React.FC = () => {
 
         {/* Abstract 3D Dashboard Mockup Elements */}
         <div className="mt-16 md:mt-24 w-full max-w-6xl relative h-[30vh] sm:h-[40vh] md:h-[50vh] perspective-1000 animate-in fade-in slide-in-from-bottom-24 duration-1000 delay-700">
-           <div className="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-[#030303] via-transparent to-transparent z-10 pointer-events-none"></div>
-           <div className="w-full h-full bg-white/70 dark:bg-[#0a0a0a]/80 border border-white dark:border-white/10 rounded-t-[2rem] md:rounded-t-[3rem] backdrop-blur-2xl transform rotateX-[25deg] shadow-[0_-20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_-30px_70px_rgba(139,92,246,0.3)] overflow-hidden flex flex-col p-4 md:p-8 gap-4 md:gap-6 pointer-events-none">
+           <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-transparent z-10 pointer-events-none"></div>
+           <div className="w-full h-full bg-[#0a0a0a]/80 border border-white/10 rounded-t-[2rem] md:rounded-t-[3rem] backdrop-blur-2xl transform rotateX-[25deg] shadow-[0_-30px_70px_rgba(139,92,246,0.3)] overflow-hidden flex flex-col p-4 md:p-8 gap-4 md:gap-6 pointer-events-none">
               {/* Fake UI Inside */}
-              <div className="flex justify-between items-center opacity-50 border-b border-slate-100 dark:border-white/5 pb-4 md:pb-6">
+              <div className="flex justify-between items-center opacity-50 border-b border-white/5 pb-4 md:pb-6">
                  <div className="h-6 md:h-8 w-24 md:w-32 bg-slate-100 dark:bg-white/10 rounded-lg"></div>
                  <div className="flex gap-3 md:gap-4">
                     <div className="h-6 md:h-8 w-6 md:w-8 bg-slate-100 dark:bg-white/10 rounded-full"></div>
@@ -153,7 +101,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Marquee Section */}
-      <div className="py-6 md:py-8 border-y border-slate-200 dark:border-white/5 bg-white/50 dark:bg-[#0a0a0a] flex overflow-hidden whitespace-nowrap relative z-20 backdrop-blur-sm">
+      <div className="py-6 md:py-8 border-y border-white/5 bg-[#0a0a0a] flex overflow-hidden whitespace-nowrap relative z-20 backdrop-blur-sm">
          <div className="animate-[marquee_20s_linear_infinite] flex gap-12 md:gap-16 items-center">
             {[...Array(15)].map((_, i) => (
               <span key={i} className="text-lg md:text-3xl font-black text-slate-200 dark:text-white/10 uppercase tracking-widest flex items-center gap-6 md:gap-8">
@@ -174,7 +122,7 @@ const LandingPage: React.FC = () => {
 
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-auto md:auto-rows-[350px]">
             {/* Large Card */}
-            <div className="md:col-span-2 md:row-span-2 bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border border-white dark:border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 hover:border-cyan-500/30 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[400px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl">
+            <div className="md:col-span-2 md:row-span-2 bg-[#0a0a0a] border border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 hover:border-cyan-500/30 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[400px] md:min-h-0 shadow-2xl">
                <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/5 dark:bg-cyan-500/20 blur-[100px] group-hover:bg-cyan-500/10 dark:group-hover:bg-cyan-500/30 transition-all duration-700 pointer-events-none"></div>
                <div className="relative z-10">
                  <Activity size={40} className="text-cyan-600 dark:text-cyan-400 mb-6 md:mb-8" />
@@ -191,7 +139,7 @@ const LandingPage: React.FC = () => {
             </div>
 
             {/* Small Card 1 */}
-            <div className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border border-white dark:border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 hover:border-violet-500/30 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[300px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl">
+            <div className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 hover:border-violet-500/30 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[300px] md:min-h-0 shadow-2xl">
                <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-violet-500/5 dark:bg-violet-500/20 blur-[80px] group-hover:bg-violet-500/10 dark:group-hover:bg-violet-500/40 transition-all duration-700 pointer-events-none"></div>
                <ShieldCheck size={32} className="text-violet-600 dark:text-violet-400 relative z-10" />
                <div className="relative z-10">
@@ -201,7 +149,7 @@ const LandingPage: React.FC = () => {
             </div>
 
             {/* Small Card 2 */}
-            <div className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border border-white dark:border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 hover:border-fuchsia-500/30 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[300px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl">
+            <div className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 hover:border-fuchsia-500/30 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[300px] md:min-h-0 shadow-2xl">
                <div className="absolute -left-10 -bottom-10 w-64 h-64 bg-fuchsia-500/5 dark:bg-fuchsia-500/20 blur-[80px] group-hover:bg-fuchsia-500/10 dark:group-hover:bg-fuchsia-500/40 transition-all duration-700 pointer-events-none"></div>
                <Globe size={32} className="text-fuchsia-600 dark:text-fuchsia-400 relative z-10" />
                <div className="relative z-10">
@@ -214,7 +162,7 @@ const LandingPage: React.FC = () => {
 
       {/* Massive CTA */}
       <section className="py-20 md:py-32 px-4 md:px-6 relative z-20">
-        <div className="max-w-6xl mx-auto bg-white/70 dark:bg-gradient-to-br dark:from-[#0a0a0a] dark:to-[#111] backdrop-blur-2xl border border-white dark:border-white/10 rounded-[3rem] md:rounded-[4rem] p-12 md:p-32 text-center relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_0_100px_rgba(139,92,246,0.15)] transition-all duration-500">
+        <div className="max-w-6xl mx-auto bg-gradient-to-br from-[#0a0a0a] to-[#111] backdrop-blur-2xl border border-white/10 rounded-[3rem] md:rounded-[4rem] p-12 md:p-32 text-center relative overflow-hidden shadow-[0_0_100px_rgba(139,92,246,0.15)] transition-all duration-500">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-violet-500/10 dark:from-violet-600/20 via-transparent to-transparent pointer-events-none"></div>
           <div className="relative z-10 space-y-8 md:space-y-12 flex flex-col items-center">
             <h2 className="text-4xl md:text-8xl font-black tracking-tighter leading-[0.9] text-slate-900 dark:text-white">
@@ -230,7 +178,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       
-      <footer className="py-16 border-t border-slate-200 dark:border-white/5 text-center relative z-10 bg-white/50 dark:bg-[#030303] backdrop-blur-sm">
+      <footer className="py-16 border-t border-white/5 text-center relative z-10 bg-[#030303] backdrop-blur-sm">
         <div className="flex items-center justify-center gap-3 mb-8">
            <Zap className="text-cyan-600 dark:text-cyan-400" size={28} fill="currentColor" />
            <span className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">UBAK<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">PRO</span></span>

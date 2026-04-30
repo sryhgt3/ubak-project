@@ -31,7 +31,10 @@ const TypewriterMessage: React.FC<{ text: string, onComplete: () => void, speed?
 };
 
 const Chatbot: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    const saved = localStorage.getItem('chatbot_isOpen');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -69,6 +72,11 @@ const Chatbot: React.FC = () => {
     }
     scrollToBottom();
   }, [messages]);
+
+  // Persist isOpen state
+  useEffect(() => {
+    localStorage.setItem('chatbot_isOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

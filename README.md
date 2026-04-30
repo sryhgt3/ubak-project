@@ -50,41 +50,56 @@ Sistem akses yang aman dengan tiga level pengguna:
 
 ## 🚀 Memulai (Docker)
 
-Kami menyediakan dua mode lingkungan menggunakan Docker:
+This project can be run in two modes: **Production** (fully containerized) and **Development** (hybrid).
 
-### 1. Mode Development (Hot Reload)
-Gunakan mode ini untuk pengembangan lokal. Perubahan pada kode backend atau frontend akan langsung terlihat tanpa perlu build ulang.
+### 1. Production Mode
 
-```bash
-# Jalankan environment development
-docker compose -f docker-compose.dev.yml up -d
+This mode is recommended for deployment or for running the application as a complete, self-contained unit. It builds the frontend into static files and serves everything via Docker.
 
-# Frontend: http://localhost:5173
-# Backend API: http://localhost:8800
-# PgAdmin: http://localhost:5051
-```
+**Steps:**
+1.  Run the main Docker Compose command:
+    ```bash
+    docker-compose -f docker-compose-prod.yml up -d --build
+    ```
+2.  (First time only) Seed the database to create default user accounts:
+    ```bash
+    docker exec -it ubak_backend python seed_db.py
+    ```
 
-### 2. Mode Production
-Gunakan mode ini untuk melihat versi aplikasi yang sudah dioptimasi.
+**Endpoints:**
+- **Application**: `http://localhost:3001`
+- **Backend API Docs**: `http://localhost:8800/docs`
+- **pgAdmin**: `http://localhost:5050`
 
-```bash
-# Jalankan environment production
-docker compose -f docker-compose.prod.yml up -d
 
-# App: http://localhost (dilayani oleh Nginx)
-# Backend API: http://localhost:8800
-# PgAdmin: http://localhost:5050
-```
+### 2. Development Mode
 
----
+This mode is recommended for active development on the frontend. The frontend runs on your local machine with hot-reloading, while the backend and database run in Docker.
 
-## 🏗️ Arsitektur Backend
+**Steps:**
+1.  **Create Frontend Environment File:** Create a file named `.env` inside the `frontend` directory (`frontend/.env`) with the following content:
+    ```
+    VITE_API_URL=http://localhost:8800
+    ```
+2.  **Start Backend Services:** In your project's root directory, run the development Docker Compose file in detached mode:
+    ```bash
+    docker-compose up -d
+    ```
+3.  **(First time only) Seed the database to create default user accounts:**
+    ```bash
+    docker exec -it ubak_backend_dev python seed_db.py
+    ```
+4.  **Start Frontend Service:** In a **separate terminal**, navigate to the `frontend` directory and start the dev server:
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
 
-Backend UBAK (UANG BIJAK) menggunakan pola **Service Layer** dengan pendekatan **OOP (Object-Oriented Programming)**:
-- **Routers**: Bertindak sebagai Controller yang menangani HTTP Request.
-- **Services**: Berisi logika bisnis utama yang dibungkus dalam Class (misal: `AuthService`, `UserService`).
-- **Dependency Injection**: Menggunakan FastAPI `Depends` untuk menyuntikkan instance service ke dalam router.
-- **Clean Code**: Pemisahan tanggung jawab yang jelas memudahkan pemeliharaan dan pengujian kode.
+**Endpoints:**
+- **Application (Dev)**: `http://localhost:3001` (as configured in `vite.config.ts`)
+- **Backend API Docs**: `http://localhost:8800/docs`
+- **pgAdmin**: `http://localhost:5050`
 
 ---
 

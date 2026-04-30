@@ -28,3 +28,13 @@ This is the backend for the UBAK (UANG BIJAK) Web Application, built with FastAP
    ```bash
    uvicorn main:app --reload
    ```
+
+## Database Seeding
+To populate the database with default accounts (Admin, VIP, and Free), run:
+```bash
+python seed_db.py
+```
+Or if using Docker:
+```bash
+docker exec -it ubak_backend python seed_db.py
+```

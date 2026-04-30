@@ -4,55 +4,21 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import SetupModal from './SetupModal';
 import Chatbot from './Chatbot';
+import { useAuth } from '../context/AuthContext';
 
 const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark';
-  });
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [targetTheme, setTargetTheme] = useState<'light' | 'dark' | null>(null);
   const location = useLocation();
+  const { user } = useAuth(); // Get user from auth context
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const toggleDarkMode = (event: React.MouseEvent) => {
-    if (isAnimating) return;
-
-    const x = event.clientX;
-    const y = event.clientY;
-    const nextIsDark = !isDarkMode;
-
-    // Set coordinates for CSS animation
-    document.documentElement.style.setProperty('--x', `${x}px`);
-    document.documentElement.style.setProperty('--y', `${y}px`);
-
-    setTargetTheme(nextIsDark ? 'dark' : 'light');
-    setIsAnimating(true);
-    
-    // Toggle state exactly when overlay is large enough (around 400ms)
-    setTimeout(() => {
-      setIsDarkMode(nextIsDark);
-    }, 400);
-
-    setTimeout(() => {
-      setIsAnimating(false);
-      setTargetTheme(null);
-    }, 800);
   };
 
   // Close sidebar on mobile when route changes
@@ -63,14 +29,7 @@ const Layout: React.FC = () => {
   }, [location]);
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 relative transition-colors duration-500 overflow-hidden">
-      {/* Animation Overlay - Using targetTheme to prevent color flip mid-animation */}
-      {isAnimating && (
-        <div 
-          className={`theme-transition-overlay animate-reveal ${targetTheme === 'dark' ? 'bg-slate-950' : 'bg-white'}`}
-        />
-      )}
-
+    <div className="flex h-screen bg-slate-950 relative overflow-hidden">
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div 
@@ -81,15 +40,11 @@ const Layout: React.FC = () => {
 
       <Sidebar isOpen={isSidebarOpen} />
       <SetupModal />
-      <Chatbot />
-      
+      {user?.role !== 'Admin' && <Chatbot />} {/* Conditionally render Chatbot */}
+
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Navbar 
-          toggleSidebar={toggleSidebar} 
-          isDarkMode={isDarkMode} 
-          toggleDarkMode={toggleDarkMode} 
-        />
-        
+        <Navbar toggleSidebar={toggleSidebar} />
+
         <main className="flex-1 overflow-y-auto relative">
           <div className="p-4 md:p-8 max-w-full">
             <Outlet />

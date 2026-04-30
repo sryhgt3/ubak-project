@@ -8,11 +8,9 @@ import {
 
 interface NavbarProps {
   toggleSidebar: () => void;
-  isDarkMode: boolean;
-  toggleDarkMode: (event: React.MouseEvent) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isDarkMode, toggleDarkMode }) => {
+const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -118,9 +116,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isDarkMode, toggleDarkMo
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <button onClick={toggleDarkMode} className="p-2 md:p-2.5 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">
-              {isDarkMode ? <Sun className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" /> : <Moon className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />}
-            </button>
+            
             <button className="p-2 md:p-2.5 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 relative">
               <Bell className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
               <span className="absolute top-2 right-2 w-1.5 md:w-2 h-1.5 md:h-2 bg-cyan-500 dark:bg-cyan-400 rounded-full border-2 border-white dark:border-[#030303]" />

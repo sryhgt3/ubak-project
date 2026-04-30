@@ -309,9 +309,9 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="h-64 md:h-96 flex flex-col relative z-10">
+          <div className="h-[240px] md:h-[320px] lg:h-[380px] relative z-10">
             {chartView === 'comparison' ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} />
                   <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} content={<CustomTooltip />} />
@@ -324,7 +324,7 @@ const DashboardPage: React.FC = () => {
               </ResponsiveContainer>
             ) : (
               timeSeriesData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={timeSeriesData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">

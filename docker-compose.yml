@@ -22,7 +22,7 @@ services:
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
     ports:
-      - "8800:8800"
+      - "8800:8805"
     depends_on:
       - db
 

@@ -75,3 +75,15 @@ class DashboardData(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    history: Optional[List[ChatMessage]] = []
+    provider: Optional[str] = "openai"
+
+class ChatResponse(BaseModel):
+    response: str

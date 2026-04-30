@@ -1,4 +1,4 @@
-# 💰 UBAK PRO - Smart Financial Tracker
+# 💰 UBAK (UANG BIJAK) - Smart Financial Tracker
 
 ![Version](https://img.shields.io/badge/version-1.0.0-rose)
 ![React](https://img.shields.io/badge/Frontend-React%20%7C%20TS-blue)
@@ -6,7 +6,7 @@
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 ![Docker](https://img.shields.io/badge/Deployment-Docker-blue)
 
-**UBAK PRO** adalah platform manajemen keuangan cerdas yang dirancang untuk membantu Anda melacak pendapatan, mengelola pengeluaran, dan mencapai target tabungan impian dengan antarmuka yang modern, cepat, dan elegan.
+**UBAK (UANG BIJAK)** adalah platform manajemen keuangan cerdas yang dirancang untuk membantu Anda melacak pendapatan, mengelola pengeluaran, dan mencapai target tabungan impian dengan antarmuka yang modern, cepat, dan elegan.
 
 ---
 
@@ -48,42 +48,43 @@ Sistem akses yang aman dengan tiga level pengguna:
 
 ---
 
-## 🚀 Cara Menjalankan Project
+## 🚀 Memulai (Docker)
 
-### Menggunakan Docker (Rekomendasi)
+Kami menyediakan dua mode lingkungan menggunakan Docker:
 
-Hanya satu perintah untuk menjalankan seluruh ekosistem:
+### 1. Mode Development (Hot Reload)
+Gunakan mode ini untuk pengembangan lokal. Perubahan pada kode backend atau frontend akan langsung terlihat tanpa perlu build ulang.
 
 ```bash
-docker-compose up -d --build
+# Jalankan environment development
+docker compose -f docker-compose.dev.yml up -d
+
+# Frontend: http://localhost:5173
+# Backend API: http://localhost:8800
+# PgAdmin: http://localhost:5051
 ```
 
-Aplikasi akan tersedia di:
-- **Frontend**: `http://localhost` (Docker) atau `http://localhost:5173` (Manual)
-- **Backend API**: `http://localhost:8800`
-- **API Documentation**: `http://localhost:8800/docs`
-- **pgAdmin**: `http://localhost:5050`
+### 2. Mode Production
+Gunakan mode ini untuk melihat versi aplikasi yang sudah dioptimasi.
 
-### Menjalankan Manual
-
-#### 1. Backend
 ```bash
-cd backend
-cp .env.example .env  # Buat file .env dari template
-# Update DATABASE_URL di .env jika diperlukan
-python -m venv venv
-source venv/bin/activate  # atau venv\Scripts\activate di Windows
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8800
+# Jalankan environment production
+docker compose -f docker-compose.prod.yml up -d
+
+# App: http://localhost (dilayani oleh Nginx)
+# Backend API: http://localhost:8800
+# PgAdmin: http://localhost:5050
 ```
 
-#### 2. Frontend
-```bash
-cd frontend
-cp .env.example .env  # Buat file .env dari template
-npm install
-npm run dev
-```
+---
+
+## 🏗️ Arsitektur Backend
+
+Backend UBAK (UANG BIJAK) menggunakan pola **Service Layer** dengan pendekatan **OOP (Object-Oriented Programming)**:
+- **Routers**: Bertindak sebagai Controller yang menangani HTTP Request.
+- **Services**: Berisi logika bisnis utama yang dibungkus dalam Class (misal: `AuthService`, `UserService`).
+- **Dependency Injection**: Menggunakan FastAPI `Depends` untuk menyuntikkan instance service ke dalam router.
+- **Clean Code**: Pemisahan tanggung jawab yang jelas memudahkan pemeliharaan dan pengujian kode.
 
 ---
 

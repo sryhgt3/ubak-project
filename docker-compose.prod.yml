@@ -28,7 +28,6 @@ services:
   backend:
     build: ./backend
     container_name: ubak_backend
-    restart: always
     environment:
       DATABASE_URL: postgresql://postubak:postubak123@db:5432/ubak_db
       SECRET_KEY: a_very_secret_key_change_me_in_production

@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         </div>
         <div className={`ml-3 transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
           <span className="text-xl font-black tracking-tighter text-slate-900 dark:text-white whitespace-nowrap">
-            UBAK <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">PRO</span>
+            UBAK <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">(UANG BIJAK)</span>
           </span>
         </div>
       </div>

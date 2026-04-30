@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Zap, Activity, Loader2 } from 'lucide-react';
+import { X, Send, Zap, Activity, Loader2, Cpu, BrainCircuit } from 'lucide-react';
+import axios from 'axios';
 
 interface ChatMessage {
   id: string;
@@ -8,6 +9,8 @@ interface ChatMessage {
   timestamp: number;
   isStreaming?: boolean;
 }
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8800';
 
 // Typewriter effect component for the streaming message
 const TypewriterMessage: React.FC<{ text: string, onComplete: () => void, speed?: number }> = ({ text, onComplete, speed = 30 }) => {
@@ -35,6 +38,7 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [provider, setProvider] = useState<'openai' | 'gemini'>('gemini');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load history on mount
@@ -43,25 +47,25 @@ const Chatbot: React.FC = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Ensure all loaded messages are fully streamed
         const cleanMessages = parsed.map((m: ChatMessage) => ({ ...m, isStreaming: false }));
         setMessages(cleanMessages);
       } catch (e) {
         console.error("Failed to parse chat history");
       }
     } else {
-      // Initial greeting
       setMessages([{
         id: Date.now().toString(),
         sender: 'bot',
-        text: 'Hi there! How can I help you today?',
+        text: 'Hi there! I am your UBAK assistant. How can I help you with your finances today?',
         timestamp: Date.now(),
         isStreaming: true
       }]);
     }
+    
+    // Default to gemini while OpenAI is offline
+    setProvider('gemini');
   }, []);
 
-  // Save history whenever it changes, but only if no message is currently streaming
   useEffect(() => {
     const hasStreaming = messages.some(m => m.isStreaming);
     if (!hasStreaming && messages.length > 0) {
@@ -69,12 +73,16 @@ const Chatbot: React.FC = () => {
     }
     scrollToBottom();
   }, [messages]);
+  
+  useEffect(() => {
+    localStorage.setItem('chatbot_provider', provider);
+  }, [provider]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim() || isTyping || messages.some(m => m.isStreaming)) return;
 
     const userMessage: ChatMessage = {
@@ -89,35 +97,44 @@ const Chatbot: React.FC = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Mock bot response delay (simulating network request)
-    setTimeout(() => {
+    try {
+      const history = messages.slice(-10).map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }));
+
+      const response = await axios.post(`${API_URL}/api/chat/`, {
+        message: userMessage.text,
+        history: history,
+        provider: provider
+      });
+
       setIsTyping(false);
       
-      // Determine response based on input
-      let botResponseText = `You said: "${userMessage.text}". I am processing your request. I am a simple bot right now.`;
-      
-      const lowerInput = userMessage.text.toLowerCase();
-      if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
-         botResponseText = "Hello! I am your automated financial assistant. How can I optimize your wealth matrix today?";
-      } else if (lowerInput.includes('balance') || lowerInput.includes('money')) {
-         botResponseText = "To view your total balance and cash flow, please navigate to the main Dashboard. Your Total Balance is updated in real-time.";
-      } else if (lowerInput.includes('transaction') || lowerInput.includes('expense')) {
-         botResponseText = "You can add a new transaction using the 'Add Transaction' button in the sidebar or via the quick action on the dashboard.";
-      } else if (botResponseText.length < 50) {
-         // Create a longer response to show off the typewriter effect
-         botResponseText = `I have received your input: "${userMessage.text}". Analyzing financial parameters... Cross-referencing data points... The operation has been logged into the temporary buffer. Please stand by for further instructions or provide a more specific query regarding your accounts or transactions.`;
-      }
+      const botResponseText = response.data.response;
 
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
         text: botResponseText,
         timestamp: Date.now() + 1,
-        isStreaming: true // Mark as streaming so TypewriterMessage handles it
+        isStreaming: true
       };
       
       setMessages(prev => [...prev, botMessage]);
-    }, 1500); // 1.5s simulated network delay
+    } catch (error) {
+      console.error("Chatbot API Error:", error);
+      setIsTyping(false);
+      
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        text: "Sorry, I'm having trouble connecting to my brain right now. Please try again later.",
+        timestamp: Date.now() + 1,
+        isStreaming: false
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
   };
 
   const handleStreamingComplete = (id: string) => {
@@ -132,17 +149,37 @@ const Chatbot: React.FC = () => {
       {isOpen && (
         <div className="fixed bottom-0 right-0 sm:bottom-24 sm:right-6 w-full sm:w-96 h-full sm:h-[500px] sm:max-h-[80vh] bg-white dark:bg-[#0a0a0a] sm:rounded-[2rem] shadow-2xl flex flex-col z-[10000] border-t sm:border border-slate-200 dark:border-white/10 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 backdrop-blur-3xl">
           {/* Header */}
-          <div className="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 p-5 flex justify-between items-center relative overflow-hidden">
+          <div className="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 p-4 flex justify-between items-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 dark:bg-cyan-500/10 blur-2xl rounded-full pointer-events-none"></div>
-            <div className="font-black text-xs flex items-center gap-3 text-slate-900 dark:text-white uppercase tracking-widest relative z-10">
-              <div className="w-8 h-8 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg flex items-center justify-center border border-cyan-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(34,211,238,0.2)]">
-                <Activity size={16} />
-              </div>
-              Support Chat
+            <div className="flex flex-col gap-1 relative z-10">
+                <div className="font-black text-[10px] flex items-center gap-2 text-slate-900 dark:text-white uppercase tracking-widest">
+                <div className="w-6 h-6 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg flex items-center justify-center border border-cyan-500/20">
+                    <Activity size={12} />
+                </div>
+                Support Chat
+                </div>
+                
+                {/* Provider Toggle */}
+                <div className="flex bg-slate-200/50 dark:bg-white/5 p-0.5 rounded-lg border border-slate-300/50 dark:border-white/10 w-fit">
+                    <button 
+                        disabled
+                        onClick={() => setProvider('openai')}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all opacity-40 cursor-not-allowed`}
+                    >
+                        <BrainCircuit size={10} /> OpenAI (Offline)
+                    </button>
+                    <button 
+                        onClick={() => setProvider('gemini')}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all ${provider === 'gemini' ? 'bg-white dark:bg-white/10 text-violet-600 dark:text-violet-400 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                        <Cpu size={10} /> Gemini
+                    </button>
+                </div>
             </div>
+            
             <button 
               onClick={() => setIsOpen(false)}
-              className="p-2 bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-slate-900 dark:hover:text-white relative z-10"
+              className="p-2 bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-slate-900 dark:hover:text-white relative z-10 self-start"
             >
               <X size={18} />
             </button>
@@ -166,7 +203,7 @@ const Chatbot: React.FC = () => {
                     <TypewriterMessage 
                       text={msg.text} 
                       onComplete={() => handleStreamingComplete(msg.id)} 
-                      speed={35} // Configurable speed (ms per char)
+                      speed={35} 
                     />
                   ) : (
                     msg.text
@@ -175,17 +212,16 @@ const Chatbot: React.FC = () => {
               </div>
             ))}
             
-            {/* Loading Indicator */}
             {isTyping && (
                <div className="flex justify-start animate-in fade-in">
                  <div className="bg-white dark:bg-white/5 text-cyan-600 dark:text-cyan-400 rounded-2xl rounded-tl-none border border-slate-200 dark:border-white/10 p-4 shadow-sm dark:shadow-lg flex items-center gap-2">
                     <Loader2 size={14} className="animate-spin" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Processing...</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                        {provider === 'openai' ? 'OpenAI' : 'Gemini'} is thinking...
+                    </span>
                  </div>
                </div>
             )}
-            
-            {/* Invisible div to scroll to */}
             <div ref={messagesEndRef} className="h-1" />
           </div>
 
@@ -204,7 +240,7 @@ const Chatbot: React.FC = () => {
               <button 
                 onClick={handleSend}
                 disabled={!inputValue.trim() || isTyping || messages.some(m => m.isStreaming)}
-                className="bg-slate-900 dark:bg-white text-white dark:text-black p-3 rounded-xl hover:scale-105 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-lg dark:shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                className={`p-3 rounded-xl hover:scale-105 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-lg ${provider === 'openai' ? 'bg-slate-900 dark:bg-white text-white dark:text-black dark:shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'bg-violet-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]'}`}
               >
                 <Send size={18} />
               </button>

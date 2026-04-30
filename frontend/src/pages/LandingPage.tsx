@@ -87,7 +87,7 @@ const LandingPage: React.FC = () => {
             <Zap size={20} fill="currentColor" />
           </div>
           <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">
-            UBAK<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">PRO</span>
+            UBAK <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">(UANG BIJAK)</span>
           </span>
         </div>
         <div className="flex items-center gap-6">
@@ -157,7 +157,7 @@ const LandingPage: React.FC = () => {
          <div className="animate-[marquee_20s_linear_infinite] flex gap-12 md:gap-16 items-center">
             {[...Array(15)].map((_, i) => (
               <span key={i} className="text-lg md:text-3xl font-black text-slate-200 dark:text-white/10 uppercase tracking-widest flex items-center gap-6 md:gap-8">
-                 UBAK PRO <Zap className="text-cyan-500/20 dark:text-cyan-500/30" />
+                 UBAK (UANG BIJAK) <Zap className="text-cyan-500/20 dark:text-cyan-500/30" />
               </span>
             ))}
          </div>
@@ -233,10 +233,10 @@ const LandingPage: React.FC = () => {
       <footer className="py-16 border-t border-slate-200 dark:border-white/5 text-center relative z-10 bg-white/50 dark:bg-[#030303] backdrop-blur-sm">
         <div className="flex items-center justify-center gap-3 mb-8">
            <Zap className="text-cyan-600 dark:text-cyan-400" size={28} fill="currentColor" />
-           <span className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">UBAK<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">PRO</span></span>
+           <span className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">UBAK <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">(UANG BIJAK)</span></span>
         </div>
         <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-[0.4em]">
-          &copy; 2026 UBAK Pro &bull; Excellence In Finance
+          &copy; 2026 UBAK (UANG BIJAK) &bull; Excellence In Finance
         </p>
       </footer>
 

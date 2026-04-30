@@ -1,6 +1,6 @@
-# UBAK Backend
+# UBAK (UANG BIJAK) Backend
 
-This is the backend for the UBAK Web Application, built with FastAPI and SQLAlchemy.
+This is the backend for the UBAK (UANG BIJAK) Web Application, built with FastAPI and SQLAlchemy.
 
 ## Tech Stack
 - **FastAPI:** High-performance Python web framework.

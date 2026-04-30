@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, Base
-from routers import auth, users, transactions, dashboard
+from routers import auth, users, transactions, dashboard, chat
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -30,6 +30,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(transactions.router)
 app.include_router(dashboard.router)
+app.include_router(chat.router)
 
 if __name__ == "__main__":
     import uvicorn

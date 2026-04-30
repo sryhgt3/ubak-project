@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ubak_db_dev
+    restart: always
+    environment:
+      POSTGRES_USER: postubak
+      POSTGRES_PASSWORD: postubak123
+      POSTGRES_DB: ubak_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ubak_pgadmin_dev
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ubak@admin.com
+      PGADMIN_DEFAULT_PASSWORD: adminubak123
+    ports:
+      - "5051:80"
+    depends_on:
+      - db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ubak_backend_dev
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8800:8800"
+    depends_on:
+      - db
+    command: uvicorn main:app --host 0.0.0.0 --port 8800 --reload
+
+volumes:
+  postgres_data_dev:

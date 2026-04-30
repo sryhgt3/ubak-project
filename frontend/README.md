@@ -1,6 +1,6 @@
-# UBAK Frontend
+# UBAK (UANG BIJAK) Frontend
 
-This is the frontend for the UBAK Web Application, built with React 19, TypeScript, and Tailwind CSS.
+This is the frontend for the UBAK (UANG BIJAK) Web Application, built with React 19, TypeScript, and Tailwind CSS.
 
 ## Tech Stack
 - **React 19:** Functional components and hooks.

@@ -86,6 +86,11 @@ const Chatbot: React.FC = () => {
     localStorage.setItem('chatbot_isOpen', JSON.stringify(isOpen));
   }, [isOpen]);
 
+  // Persist isOpen state
+  useEffect(() => {
+    localStorage.setItem('chatbot_isOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };

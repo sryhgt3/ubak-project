@@ -260,18 +260,22 @@ const DashboardPage: React.FC = () => {
 
           {/* Workload / Targets Widget */}
           <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
-             <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:from-cyan-900/40 dark:to-black p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-cyan-500/30 relative overflow-hidden flex flex-col justify-center min-h-[140px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-all duration-500 hover:border-white">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 dark:bg-cyan-500/20 blur-2xl rounded-full"></div>
-                <Target size={24} className="text-cyan-600 dark:text-cyan-400 mb-3 md:mb-4 relative z-10" />
-                <p className="text-cyan-600/50 dark:text-cyan-400/70 text-[8px] md:text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Savings Goal</p>
-                <p className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white relative z-10 tracking-tight truncate">{user?.savings_goal || "NOT SET"}</p>
+             <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex flex-col justify-center min-h-[140px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 hover:border-cyan-500/30 group">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 dark:bg-cyan-500/20 blur-2xl rounded-full group-hover:bg-cyan-500/30 transition-colors pointer-events-none"></div>
+                <div className="bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 p-2.5 rounded-xl w-fit mb-4 relative z-10 border border-cyan-500/20">
+                   <Target size={20} />
+                </div>
+                <p className="text-slate-400 dark:text-slate-500 text-[8px] md:text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Savings Goal</p>
+                <p className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white relative z-10 tracking-tight truncate uppercase">{user?.savings_goal || "NOT SET"}</p>
              </motion.div>
              
-             <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:from-violet-900/40 dark:to-black p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-violet-500/30 relative overflow-hidden flex flex-col justify-center min-h-[140px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-all duration-500 hover:border-white">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 dark:bg-violet-500/20 blur-2xl rounded-full"></div>
-                <Activity size={24} className="text-violet-600 dark:text-violet-400 mb-3 md:mb-4 relative z-10" />
-                <p className="text-violet-600/50 dark:text-violet-400/70 text-[8px] md:text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Max Spending</p>
-                <p className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white relative z-10 tracking-tight">{formatCurrency(user?.max_spending || 0)}</p>
+             <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex flex-col justify-center min-h-[140px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 hover:border-violet-500/30 group">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-violet-500/10 dark:bg-violet-500/20 blur-2xl rounded-full group-hover:bg-violet-500/30 transition-colors pointer-events-none"></div>
+                <div className="bg-violet-500/10 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 p-2.5 rounded-xl w-fit mb-4 relative z-10 border border-violet-500/20">
+                   <Activity size={20} />
+                </div>
+                <p className="text-slate-400 dark:text-slate-500 text-[8px] md:text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Max Spending</p>
+                <p className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white relative z-10 tracking-tight">{formatCurrency(user?.max_spending || 0)}</p>
              </motion.div>
           </div>
         </motion.div>

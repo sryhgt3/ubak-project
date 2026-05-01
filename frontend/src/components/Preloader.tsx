@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PRELOADER_COOLDOWN_MS = 10 * 60 * 1000;
@@ -34,8 +34,7 @@ const Preloader = () => {
 
     document.body.style.overflow = "hidden";
 
-    const timers: NodeJS.Timeout[] = [];
-
+    const timers: ReturnType<typeof setTimeout>[] = [];
     // Jika dimulai dari bentuk 'V' (step 1)
     if (step === 1) {
       timers.push(

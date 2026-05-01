@@ -1,4 +1,4 @@
-# 💰 UBAK (UANG BIJAK) - Smart Financial Tracker
+# 💰 UBAK PRO - Smart Financial Tracker
 
 ![Version](https://img.shields.io/badge/version-1.0.0-rose)
 ![React](https://img.shields.io/badge/Frontend-React%20%7C%20TS-blue)
@@ -6,7 +6,7 @@
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 ![Docker](https://img.shields.io/badge/Deployment-Docker-blue)
 
-**UBAK (UANG BIJAK)** adalah platform manajemen keuangan cerdas yang dirancang untuk membantu Anda melacak pendapatan, mengelola pengeluaran, dan mencapai target tabungan impian dengan antarmuka yang modern, cepat, dan elegan.
+**UBAK PRO** adalah platform manajemen keuangan cerdas yang dirancang untuk membantu Anda melacak pendapatan, mengelola pengeluaran, dan mencapai target tabungan impian dengan antarmuka yang modern, cepat, dan elegan.
 
 ---
 
@@ -48,7 +48,7 @@ Sistem akses yang aman dengan tiga level pengguna:
 
 ---
 
-## 🚀 Memulai (Docker)
+## 🚀 Cara Menjalankan Project
 
 This project can be run in two modes: **Production** (fully containerized) and **Development** (hybrid).
 

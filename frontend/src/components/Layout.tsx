@@ -40,7 +40,7 @@ const Layout: React.FC = () => {
 
       <Sidebar isOpen={isSidebarOpen} />
       <SetupModal />
-      {user?.role !== 'Admin' && <Chatbot />} {/* Conditionally render Chatbot */}
+      {user?.role !== 'Admin' && user?.setup_completed && <Chatbot />} {/* Conditionally render Chatbot */}
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Navbar toggleSidebar={toggleSidebar} />

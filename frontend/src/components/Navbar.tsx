@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Menu, Search, Bell, LogOut, ChevronRight, ShieldCheck, Crown, User, Sun, Moon, PlusCircle, LayoutDashboard, ArrowUpCircle, ArrowDownCircle, UserPlus, X
+  Menu, Search, Bell, LogOut, ChevronRight, ShieldCheck, Crown, User, PlusCircle, LayoutDashboard, ArrowUpCircle, ArrowDownCircle, UserPlus, X
 } from 'lucide-react';
 
 interface NavbarProps {

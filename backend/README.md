@@ -38,3 +38,14 @@ Or if using Docker:
 ```bash
 docker exec -it ubak_backend python seed_db.py
 ```
+
+### Environment Modes
+The seeder behavior changes based on the `ENVIRONMENT` variable in your `.env` file:
+
+- **Development (`ENVIRONMENT=development`):**
+  - Seeds all 3 accounts.
+  - If `DEFAULT_PASSWORD` variables are missing, it uses defaults (e.g., `UbakAdmin123`).
+- **Production (`ENVIRONMENT=production`):**
+  - Seeds all 3 accounts.
+  - **MANDATORY:** You must set `DEFAULT_ADMIN_PASSWORD`, `DEFAULT_VIP_PASSWORD`, and `DEFAULT_FREE_PASSWORD` in your `.env`.
+  - The seeder will abort if these are not set, preventing the use of insecure default passwords on a live server.

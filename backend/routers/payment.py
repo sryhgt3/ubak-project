@@ -1,39 +1,56 @@
 import os
 import hashlib
+import logging
+import json
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 import midtransclient
-from datetime import datetime
-import uuid
 
 from dependencies import get_db, get_current_user
 from models import User, UserRole, PaymentOrder
-from schemas import PaymentResponse, MidtransWebhook
+from schemas import PaymentResponse
 
 router = APIRouter(prefix="/api/payment", tags=["payment"])
 
-# Midtrans Configuration
+# =========================
+# LOGGER CONFIG
+# =========================
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+# =========================
+# MIDTRANS CONFIG
+# =========================
 SERVER_KEY = os.getenv("MIDTRANS_SERVER_KEY", "your_server_key")
 IS_PRODUCTION = os.getenv("MIDTRANS_IS_PRODUCTION", "False").lower() == "true"
+
+if not SERVER_KEY or SERVER_KEY == "your_server_key":
+    raise RuntimeError("MIDTRANS_SERVER_KEY is not configured")
 
 snap = midtransclient.Snap(
     is_production=IS_PRODUCTION,
     server_key=SERVER_KEY
 )
 
+
+# =========================
+# CREATE PAYMENT
+# =========================
 @router.post("/create", response_model=PaymentResponse)
 async def create_payment(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+
     # Only Free users can upgrade
     if current_user.role != UserRole.Free:
-        raise HTTPException(status_code=400, detail="Only Free users can upgrade to VIP")
+        raise HTTPException(status_code=400, detail="Only Free users can upgrade")
 
     order_id = f"VIP-{uuid.uuid4().hex[:8].upper()}-{current_user.id}"
     amount = 10000
 
-    # 1. Create Midtrans Transaction
     param = {
         "transaction_details": {
             "order_id": order_id,
@@ -47,57 +64,124 @@ async def create_payment(
             "id": "VIP_UPGRADE",
             "price": amount,
             "quantity": 1,
-            "name": "Upgrade to VIP Membership"
+            "name": "VIP Membership"
         }]
     }
 
     try:
         transaction = snap.create_transaction(param)
-        snap_token = transaction['token']
-        redirect_url = transaction['redirect_url']
 
-        # 2. Save PaymentOrder to Database
-        new_order = PaymentOrder(
+        # Save order
+        order = PaymentOrder(
             order_id=order_id,
             user_id=current_user.id,
             amount=amount,
             status="pending"
         )
-        db.add(new_order)
+
+        db.add(order)
         db.commit()
 
-        return PaymentResponse(token=snap_token, redirect_url=redirect_url)
+        return PaymentResponse(
+            token=transaction["token"],
+            redirect_url=transaction["redirect_url"],
+            order_id=order_id
+        )
+
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Create payment error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Payment creation failed")
 
-@router.post("/webhook")
+
+# =========================
+# MIDTRANS WEBHOOK
+# =========================
+@router.post("/midtrans-notification")
 async def midtrans_webhook(
-    data: MidtransWebhook,
+    request: Request,
     db: Session = Depends(get_db)
 ):
-    # 1. Validate Signature (Optional but recommended)
-    # signature = hashlib.sha512((data.order_id + data.status_code + data.gross_amount + SERVER_KEY).encode()).hexdigest()
-    # if signature != data.signature_key:
-    #     raise HTTPException(status_code=400, detail="Invalid signature")
 
-    # 2. Find Order
-    order = db.query(PaymentOrder).filter(PaymentOrder.order_id == data.order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+    data = await request.json()
+    logger.info(f"Midtrans webhook: {json.dumps(data)}")
 
-    # 3. Update Order Status
-    status = data.transaction_status
-    order.status = status
-    
-    # 4. If Settlement, Update User to VIP
-    if status in ["settlement", "capture"]:
-        user = db.query(User).filter(User.id == order.user_id).first()
-        if user:
-            user.role = UserRole.VIP
-            db.add(user)
+    try:
+        # =========================
+        # EXTRACT SAFE FIELDS
+        # =========================
+        order_id = data.get("order_id")
+        status_code = str(data.get("status_code", "")).strip()
+        gross_amount = str(data.get("gross_amount", "")).strip()
+        signature_key = data.get("signature_key")
+        transaction_status = data.get("transaction_status")
 
-    db.add(order)
-    db.commit()
+        if not order_id or not signature_key:
+            raise HTTPException(status_code=400, detail="Invalid payload")
 
-    return {"message": "Webhook received successfully"}
+        # =========================
+        # SIGNATURE VALIDATION
+        # =========================
+        signature_str = (
+            str(order_id).strip()
+            + status_code
+            + gross_amount
+            + str(SERVER_KEY).strip()
+        )
+
+        expected_signature = hashlib.sha512(
+            signature_str.encode()
+        ).hexdigest()
+
+        if expected_signature != signature_key:
+            logger.warning("Invalid signature detected")
+            raise HTTPException(status_code=400, detail="Invalid signature")
+
+        # =========================
+        # FIND ORDER
+        # =========================
+        order = db.query(PaymentOrder).filter(
+            PaymentOrder.order_id == order_id
+        ).first()
+
+        if not order:
+            logger.warning(f"Order not found: {order_id}")
+            return {"message": "order not found"}
+
+        # =========================
+        # IDEMPOTENCY CHECK
+        # =========================
+        if order.status == transaction_status:
+            return {"message": "duplicate ignored"}
+
+        if order.status in ["settlement", "capture"] and transaction_status in ["settlement", "capture"]:
+            return {"message": "already processed"}
+
+        # =========================
+        # UPDATE ORDER STATUS
+        # =========================
+        order.status = transaction_status
+
+        # =========================
+        # UPGRADE USER
+        # =========================
+        if transaction_status in ["settlement", "capture"]:
+            user = db.query(User).filter(User.id == order.user_id).first()
+
+            if user and user.role != UserRole.VIP:
+                user.role = UserRole.VIP
+                db.add(user)
+
+        db.commit()
+
+        return {"message": "success"}
+
+    except HTTPException as e:
+        db.rollback()
+        logger.error(f"HTTP error: {e.detail}")
+        raise e
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Webhook error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")

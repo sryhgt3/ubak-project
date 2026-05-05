@@ -161,6 +161,7 @@ class MidtransWebhook(BaseModel):
     status_message: str
     status_code: str
     signature_key: str
+    settlement_time: Optional[str] = None
     payment_type: str
     order_id: str
     merchant_id: str

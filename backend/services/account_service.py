@@ -1,11 +1,13 @@
 from fastapi import HTTPException
-from models import User, Account
+from models import User, Account, Transaction, TransactionType
 from schemas import AccountCreate, AccountUpdate
 from repositories.account_repository import AccountRepository
+from repositories.transaction_repository import TransactionRepository
 
 class AccountService:
-    def __init__(self, account_repo: AccountRepository):
+    def __init__(self, account_repo: AccountRepository, transaction_repo: TransactionRepository = None):
         self.account_repo = account_repo
+        self.transaction_repo = transaction_repo
 
     def get_user_accounts(self, user: User):
         return self.account_repo.get_by_user_id(user.id)
@@ -22,7 +24,21 @@ class AccountService:
             balance=account_data.balance,
             max_spending=account_data.max_spending
         )
-        return self.account_repo.create(new_account)
+        created_account = self.account_repo.create(new_account)
+
+        # Create initial balance transaction if balance > 0
+        if account_data.balance > 0 and self.transaction_repo:
+            initial_tx = Transaction(
+                user_id=user.id,
+                account_id=created_account.id,
+                amount=account_data.balance,
+                type=TransactionType.Income,
+                category="Initial Balance",
+                description=f"Initial balance for {created_account.name}"
+            )
+            self.transaction_repo.create(initial_tx)
+
+        return created_account
 
     def update_account(self, account_id: int, account_data: AccountUpdate, user: User):
         account = self.get_account_by_id(account_id, user)

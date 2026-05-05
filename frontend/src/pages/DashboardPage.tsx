@@ -130,32 +130,58 @@ const DashboardPage: React.FC = () => {
       setIsUpdating(false);
     }
   };
-
   const healthData = useMemo(() => {
     if (!dashboardData) return null;
+  
     const income = dashboardData.total_income || 0;
     const expense = dashboardData.total_expenses || 0;
     
-    // Ratio = (Income / Expense) * 100
-    const ratio = expense === 0 ? (income > 0 ? 101 : 100) : (income / expense) * 100;
-    
-    if (ratio > 100) {
+    // Determine effective max spending: selected account or total of all wallets
+    let maxSpending = 0;
+    if (selectedAccountId) {
+      const selectedAccount = dashboardData.accounts?.find((a: any) => a.id === selectedAccountId);
+      maxSpending = selectedAccount?.max_spending || 0;
+    } else {
+      // Sum max_spending from all accounts
+      const totalWalletsMaxSpending = dashboardData.accounts?.reduce((acc: number, curr: any) => acc + (curr.max_spending || 0), 0) || 0;
+      // Fallback to global user max_spending if wallets have no limits
+      maxSpending = totalWalletsMaxSpending > 0 ? totalWalletsMaxSpending : (dashboardData.max_spending || 0);
+    }
+
+    // Ratio logic: Use maxSpending if available, otherwise income
+    const isUsingLimit = maxSpending > 0;
+    const denominator = isUsingLimit ? maxSpending : income;
+    const ratio = denominator === 0 ? 0 : (expense / denominator) * 100;
+
+    // Edge case: tidak ada pemasukan atau limit
+    if (denominator === 0) {
       return {
-        lottie: "https://lottie.host/05bae99e-3f32-4287-a351-2b85cc3e95d6/HqGUcCGvMm.lottie",
-        color: "text-emerald-500",
-        bg: "bg-emerald-500/10",
-        border: "border-emerald-500/20",
-        insight: "Kamu sedang dalam kondisi keuangan sehat",
-        label: "Sehat"
+        lottie: "https://lottie.host/6783cb59-59ef-493c-ace9-bba15d7d8426/4ILlmFjW5Y.lottie",
+        color: "text-rose-600",
+        bg: "bg-rose-600/10",
+        border: "border-rose-600/20",
+        insight: isUsingLimit ? "Limit tidak valid (0), kondisi kritis" : "Tidak ada pemasukan, kondisi keuangan kritis",
+        label: "Danger"
+      };
+    }
+
+    if (ratio >= 100) {
+      return {
+        lottie: "https://lottie.host/6783cb59-59ef-493c-ace9-bba15d7d8426/4ILlmFjW5Y.lottie",
+        color: "text-rose-600",
+        bg: "bg-rose-600/10",
+        border: "border-rose-600/20",
+        insight: isUsingLimit ? "Pengeluaran telah melebihi limit!" : "Pengeluaran menyamai atau melebihi pemasukan!",
+        label: "Danger"
       };
     } else if (ratio >= 80) {
       return {
-        lottie: "https://lottie.host/0527b941-d001-4b2c-8af2-82b5e3f51f52/eZPpWnp7jx.lottie",
-        color: "text-cyan-500",
-        bg: "bg-cyan-500/10",
-        border: "border-cyan-500/20",
-        insight: "Pengeluaran dan pemasukan seimbang",
-        label: "Sehat"
+        lottie: "https://lottie.host/6783cb59-59ef-493c-ace9-bba15d7d8426/4ILlmFjW5Y.lottie",
+        color: "text-rose-400",
+        bg: "bg-rose-400/10",
+        border: "border-rose-400/20",
+        insight: isUsingLimit ? `Pengeluaran mendekati limit (≥80%)` : "Pengeluaran sangat tinggi (≥80%)",
+        label: "Warning"
       };
     } else if (ratio >= 60) {
       return {
@@ -163,29 +189,29 @@ const DashboardPage: React.FC = () => {
         color: "text-amber-500",
         bg: "bg-amber-500/10",
         border: "border-amber-500/20",
-        insight: "Perlu mengurangi pengeluaran 20%",
-        label: "Warning"
+        insight: isUsingLimit ? "Pengeluaran mulai mendekati batas limit" : "Mulai mendekati batas aman",
+        label: "Caution"
       };
     } else if (ratio >= 40) {
       return {
-        lottie: "https://lottie.host/6783cb59-59ef-493c-ace9-bba15d7d8426/4ILlmFjW5Y.lottie",
-        color: "text-rose-400",
-        bg: "bg-rose-400/10",
-        border: "border-rose-400/20",
-        insight: "Pengeluaran kamu terlalu tinggi",
-        label: "Danger"
+        lottie: "https://lottie.host/0527b941-d001-4b2c-8af2-82b5e3f51f52/eZPpWnp7jx.lottie",
+        color: "text-cyan-500",
+        bg: "bg-cyan-500/10",
+        border: "border-cyan-500/20",
+        insight: isUsingLimit ? "Pengeluaran aman terkendali" : "Pengeluaran cukup terkendali",
+        label: "Sehat"
       };
     } else {
       return {
-        lottie: "https://lottie.host/6783cb59-59ef-493c-ace9-bba15d7d8426/4ILlmFjW5Y.lottie",
-        color: "text-rose-600",
-        bg: "bg-rose-600/10",
-        border: "border-rose-600/20",
-        insight: "Kondisi keuangan kritis, kurangi pengeluaran!",
-        label: "Danger"
+        lottie: "https://lottie.host/05bae99e-3f32-4287-a351-2b85cc3e95d6/HqGUcCGvMm.lottie",
+        color: "text-emerald-500",
+        bg: "bg-emerald-500/10",
+        border: "border-emerald-500/20",
+        insight: isUsingLimit ? "Pengeluaran jauh di bawah limit" : "Keuangan sangat sehat (pengeluaran rendah)",
+        label: "Sehat"
       };
     }
-  }, [dashboardData]);
+  }, [dashboardData, selectedAccountId]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -345,7 +371,10 @@ const DashboardPage: React.FC = () => {
 
       {isFetching ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6 md:mt-12">
-          <Skeleton className="lg:col-span-8 h-[300px] md:h-[400px]" />
+          <div className="lg:col-span-8 space-y-4 md:space-y-6">
+            <Skeleton className="h-[300px] md:h-[400px]" />
+            <Skeleton className="h-[140px] md:h-[190px]" />
+          </div>
           <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
             <Skeleton className="h-[140px] md:h-[190px]" />
             <Skeleton className="h-[140px] md:h-[190px]" />
@@ -358,49 +387,53 @@ const DashboardPage: React.FC = () => {
           animate="show"
           className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6 md:mt-12"
         >
-          {/* Main Stat Card */}
-          <motion.div variants={itemVariants} className="lg:col-span-8 bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border border-white/50 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl relative overflow-hidden group hover:border-white dark:hover:border-white/20 transition-all duration-500 rounded-[2.5rem] md:rounded-[3rem]">
-            <div className="absolute top-0 right-0 w-[300px] md:w-[400px] h-[300px] md:h-[400px] bg-cyan-400/5 dark:bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none transition-opacity duration-1000 group-hover:opacity-100 opacity-50" />
-            
-            <div className="relative z-10 flex flex-col justify-between h-full min-h-[200px] md:min-h-[300px] p-6 md:p-10">
-              <div>
-                 <p className="text-slate-400 dark:text-slate-400 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] mb-2 md:mb-4">Total Balance</p>
-                 <h2 className="text-4xl sm:text-5xl md:text-[5rem] font-black text-slate-800 dark:text-white tracking-tighter leading-none">
-                   {formatCurrency(dashboardData?.total_balance || 0)}
-                 </h2>
-              </div>
+          {/* Left Column: Balance and Health Emote */}
+          <div className="lg:col-span-8 space-y-4 md:space-y-6">
+            {/* Main Stat Card (Total Balance) */}
+            <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border border-white/50 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl relative overflow-hidden group hover:border-white dark:hover:border-white/20 transition-all duration-500 rounded-[2.5rem] md:rounded-[3rem]">
+              <div className="absolute top-0 right-0 w-[300px] md:w-[400px] h-[300px] md:h-[400px] bg-cyan-400/5 dark:bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none transition-opacity duration-1000 group-hover:opacity-100 opacity-50" />
               
-              <div className="flex flex-row items-center gap-2 md:gap-4 pt-8 md:pt-12 overflow-x-auto scrollbar-hide pb-2">
-                 <div className="flex items-center gap-1.5 md:gap-2 text-cyan-600 dark:text-cyan-400 font-black text-[8px] sm:text-[10px] md:text-sm bg-cyan-500/5 dark:bg-cyan-500/10 px-3 md:px-5 py-2 md:py-3 rounded-full border border-cyan-500/10 dark:border-cyan-500/20 backdrop-blur-md shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.15)] whitespace-nowrap shrink-0">
-                    <ArrowUpRight size={14} className="shrink-0" /> <span className="hidden xs:inline">INCOME </span>{formatCurrency(dashboardData?.total_income || 0)}
-                 </div>
-                 <div className="flex items-center gap-1.5 md:gap-2 text-violet-600 dark:text-violet-400 font-black text-[8px] sm:text-[10px] md:text-sm bg-violet-500/5 dark:bg-violet-500/10 px-3 md:px-5 py-2 md:py-3 rounded-full border border-violet-500/10 dark:border-violet-500/20 backdrop-blur-md shadow-sm dark:shadow-[0_0_20px_rgba(139,92,246,0.15)] whitespace-nowrap shrink-0">
-                    <ArrowDownCircle size={14} className="shrink-0" /> <span className="hidden xs:inline">EXPENSES </span>{formatCurrency(dashboardData?.total_expenses || 0)}
-                 </div>
+              <div className="relative z-10 flex flex-col justify-between h-full min-h-[200px] md:min-h-[300px] p-6 md:p-10">
+                <div>
+                   <p className="text-slate-400 dark:text-slate-400 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] mb-2 md:mb-4">Total Balance</p>
+                   <h2 className="text-4xl sm:text-5xl md:text-[5rem] font-black text-slate-800 dark:text-white tracking-tighter leading-none">
+                     {formatCurrency(dashboardData?.total_balance || 0)}
+                   </h2>
+                </div>
+                
+                <div className="flex flex-row items-center gap-2 md:gap-4 pt-8 md:pt-12 overflow-x-auto scrollbar-hide pb-2">
+                   <div className="flex items-center gap-1.5 md:gap-2 text-cyan-600 dark:text-cyan-400 font-black text-[8px] sm:text-[10px] md:text-sm bg-cyan-500/5 dark:bg-cyan-500/10 px-3 md:px-5 py-2 md:py-3 rounded-full border border-cyan-500/10 dark:border-cyan-500/20 backdrop-blur-md shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.15)] whitespace-nowrap shrink-0">
+                      <ArrowUpRight size={14} className="shrink-0" /> <span className="hidden xs:inline">INCOME </span>{formatCurrency(dashboardData?.total_income || 0)}
+                   </div>
+                   <div className="flex items-center gap-1.5 md:gap-2 text-violet-600 dark:text-violet-400 font-black text-[8px] sm:text-[10px] md:text-sm bg-violet-500/5 dark:bg-violet-500/10 px-3 md:px-5 py-2 md:py-3 rounded-full border border-violet-500/10 dark:border-violet-500/20 backdrop-blur-md shadow-sm dark:shadow-[0_0_20px_rgba(139,92,246,0.15)] whitespace-nowrap shrink-0">
+                      <ArrowDownCircle size={14} className="shrink-0" /> <span className="hidden xs:inline">EXPENSES </span>{formatCurrency(dashboardData?.total_expenses || 0)}
+                   </div>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          {/* Workload / Targets Widget */}
+            {/* Health Emote Card (Moved under Total Balance) */}
+            {healthData && (
+              <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-5 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex items-center gap-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 group">
+                  <div className="w-16 h-16 md:w-24 md:h-24 shrink-0 relative z-10">
+                      <DotLottieReact src={healthData.lottie} loop autoplay />
+                  </div>
+                  <div className="relative z-10">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${healthData.bg} ${healthData.color} ${healthData.border} border text-[10px] font-black uppercase tracking-widest mb-2`}>
+                          <div className={`w-1.5 h-1.5 rounded-full bg-current animate-pulse`} />
+                          KONDISI {healthData.label}
+                      </div>
+                      <p className="text-sm md:text-lg font-black text-slate-800 dark:text-white leading-tight uppercase tracking-tight italic">
+                          "{healthData.insight}"
+                      </p>
+                  </div>
+                  <div className={`absolute -right-4 -bottom-4 w-32 h-32 ${healthData.bg} blur-3xl rounded-full opacity-50`}></div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Right Column: Targets and Spending */}
           <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
-             {healthData && (
-                <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-5 md:p-6 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex items-center gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 group">
-                    <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 relative z-10">
-                        <DotLottieReact src={healthData.lottie} loop autoplay />
-                    </div>
-                    <div className="relative z-10">
-                        <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${healthData.bg} ${healthData.color} ${healthData.border} border text-[8px] font-black uppercase tracking-widest mb-1.5`}>
-                            <div className={`w-1 h-1 rounded-full bg-current animate-pulse`} />
-                            KONDISI {healthData.label}
-                        </div>
-                        <p className="text-[10px] md:text-xs font-bold text-slate-800 dark:text-white leading-tight uppercase tracking-tight italic">
-                            "{healthData.insight}"
-                        </p>
-                    </div>
-                    <div className={`absolute -right-4 -bottom-4 w-24 h-24 ${healthData.bg} blur-3xl rounded-full opacity-50`}></div>
-                </motion.div>
-             )}
-
              <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex flex-col justify-center min-h-[140px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 hover:border-cyan-500/30 group">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 dark:bg-cyan-500/20 blur-2xl rounded-full group-hover:bg-cyan-500/30 transition-colors pointer-events-none"></div>
                 <div className="bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 p-2.5 rounded-xl w-fit mb-4 relative z-10 border border-cyan-500/20">
@@ -416,11 +449,18 @@ const DashboardPage: React.FC = () => {
                    <Activity size={20} />
                 </div>
                 <p className="text-slate-400 dark:text-slate-500 text-[8px] md:text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Max Spending</p>
-                <p className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white relative z-10 tracking-tight">{formatCurrency(user?.max_spending || 0)}</p>
+                <p className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white relative z-10 tracking-tight">
+                  {formatCurrency(
+                    selectedAccountId 
+                      ? (dashboardData?.accounts?.find((a: any) => a.id === selectedAccountId)?.max_spending || 0)
+                      : (dashboardData?.accounts?.reduce((acc: number, curr: any) => acc + (curr.max_spending || 0), 0) || user?.max_spending || 0)
+                  )}
+                </p>
              </motion.div>
           </div>
         </motion.div>
       )}
+      
 
       {/* Wallets Section */}
       {!isFetching && dashboardData?.accounts && (

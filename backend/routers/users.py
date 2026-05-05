@@ -23,11 +23,14 @@ def get_user_service(user_repo: UserRepository = Depends(get_user_repository)):
 def get_account_repository(db: Session = Depends(get_db)):
     return AccountRepository(db)
 
-def get_account_service(account_repo: AccountRepository = Depends(get_account_repository)):
-    return AccountService(account_repo)
-
 def get_transaction_repository(db: Session = Depends(get_db)):
     return TransactionRepository(db)
+
+def get_account_service(
+    account_repo: AccountRepository = Depends(get_account_repository),
+    transaction_repo: TransactionRepository = Depends(get_transaction_repository)
+):
+    return AccountService(account_repo, transaction_repo)
 
 def get_transaction_service(
     tx_repo: TransactionRepository = Depends(get_transaction_repository),

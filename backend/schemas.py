@@ -7,6 +7,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     role: str
+    username: str
     setup_completed: bool
 
 class ProfileUpdate(BaseModel):
@@ -72,9 +73,21 @@ class DashboardData(BaseModel):
     vip_users: Optional[List[UserSummary]] = None
     free_users: Optional[List[UserSummary]] = None
 
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class RegisterResponse(BaseModel):
+    message: str
+
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class GoogleLoginRequest(BaseModel):
+    code: str
+    redirect_uri: str
 
 class ChatMessage(BaseModel):
     role: str

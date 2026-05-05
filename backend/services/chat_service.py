@@ -7,7 +7,7 @@ from schemas import ChatRequest, ChatResponse
 
 generation_config = {
     "max_output_tokens": 200,
-    "temperature": 0.7
+    "temperature": 0.2
 }
 
 class ChatService:

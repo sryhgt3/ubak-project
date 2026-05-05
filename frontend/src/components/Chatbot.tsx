@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Zap, Activity, Loader2, Cpu, BrainCircuit } from 'lucide-react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 interface ChatMessage {
   id: string;
@@ -42,7 +44,8 @@ const Chatbot: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [provider, setProvider] = useState<'openai' | 'gemini'>('gemini');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivLement>(null);
+  const { user } = useAuth(); // Get user from auth context
 
   // Load history on mount
   useEffect(() => {
@@ -97,6 +100,11 @@ const Chatbot: React.FC = () => {
 
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping || messages.some(m => m.isStreaming)) return;
+
+    if (user && user.role !== 'VIP') {
+      toast.error('You do not have permission to access the chatbot. This feature is for VIP users only.');
+      return;
+    }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -263,7 +271,7 @@ const Chatbot: React.FC = () => {
       )}
 
       {/* Floating Button */}
-      {!isOpen && (
+      {!isOpen && user?.setup_completed && (
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-cyan-400 to-violet-600 text-white rounded-2xl shadow-lg dark:shadow-[0_0_20px_rgba(34,211,238,0.3)] flex items-center justify-center active:scale-95 transition-all z-[10000] hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] group"

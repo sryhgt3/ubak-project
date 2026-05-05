@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from database import SessionLocal
 from security import SECRET_KEY, ALGORITHM
-from models import User
+from models import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -32,3 +32,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     if user is None:
         raise credentials_exception
     return user
+
+async def get_current_vip_user(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.VIP:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access the chatbot. This feature is for VIP users only."
+        )
+    return current_user

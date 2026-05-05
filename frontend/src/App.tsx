@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import AddTransactionPage from './pages/AddTransactionPage';
@@ -14,6 +15,8 @@ import OutflowPage from './pages/OutflowPage';
 
 import Layout from './components/Layout';
 import Preloader from './components/Preloader';
+
+import GoogleCallbackPage from './pages/GoogleCallbackPage';
 
 const App: React.FC = () => {
   return (
@@ -27,6 +30,8 @@ const App: React.FC = () => {
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
           {/* Protected Routes */}
           <Route element={<Layout />}>

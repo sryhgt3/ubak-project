@@ -35,7 +35,7 @@ const LandingPage: React.FC = () => {
             <Zap size={20} fill="currentColor" />
           </div>
           <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">
-            UBAK <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">(UANG BIJAK)</span>
+             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">UBAK</span>
           </span>
         </div>
         <div className="flex items-center gap-6">
@@ -181,7 +181,7 @@ const LandingPage: React.FC = () => {
       <footer className="py-16 border-t border-white/5 text-center relative z-10 bg-[#030303] backdrop-blur-sm">
         <div className="flex items-center justify-center gap-3 mb-8">
            <Zap className="text-cyan-600 dark:text-cyan-400" size={28} fill="currentColor" />
-           <span className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">UBAK <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">(UANG BIJAK)</span></span>
+           <span className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white"><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">Uang BijAK</span></span>
         </div>
         <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-[0.4em]">
           &copy; 2026 UBAK (UANG BIJAK) &bull; Excellence In Finance

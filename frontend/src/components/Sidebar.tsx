@@ -8,7 +8,8 @@ import {
   Zap,
   ArrowUpCircle,
   ArrowDownCircle,
-  Activity
+  Activity,
+  Wallet
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -41,6 +42,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       name: 'Add transaction', 
       path: '/add-transaction', 
       icon: <PlusCircle size={20} />, 
+      roles: ['VIP', 'Free'] 
+    },
+    { 
+      name: 'Add Wallet', 
+      path: '/add-wallet', 
+      icon: <Wallet size={20} />, 
       roles: ['VIP', 'Free'] 
     },
     { 

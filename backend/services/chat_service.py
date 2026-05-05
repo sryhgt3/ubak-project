@@ -4,6 +4,8 @@ import google.generativeai as genai
 from prompts.chatbotprompt import SYSTEM_PROMPT
 from fastapi import HTTPException
 from schemas import ChatRequest, ChatResponse
+from models import User, ChatSession, ChatMessage, ChatRole
+from repositories.chat_repository import ChatRepository
 
 generation_config = {
     "max_output_tokens": 200,
@@ -11,7 +13,8 @@ generation_config = {
 }
 
 class ChatService:
-    def __init__(self):
+    def __init__(self, chat_repo: ChatRepository):
+        self.chat_repo = chat_repo
         # Initialize OpenAI client
         self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         
@@ -23,16 +26,44 @@ class ChatService:
             model_name="gemini-2.5-flash",
             generation_config=generation_config,
             system_instruction=SYSTEM_PROMPT
-
         )
 
-    def get_chat_response(self, request: ChatRequest):
+    def get_chat_response(self, request: ChatRequest, user: User):
         provider = request.provider.lower() if request.provider else "openai"
         
+        # 1. Handle session
+        session_id = request.session_id
+        if not session_id:
+            session = ChatSession(user_id=user.id, title=request.message[:30])
+            session = self.chat_repo.create_session(session)
+            session_id = session.id
+        
+        # 2. Save user message
+        user_msg = ChatMessage(session_id=session_id, role=ChatRole.User, content=request.message)
+        self.chat_repo.create_message(user_msg)
+        
+        # 3. Get AI response
         if provider == "gemini":
-            return self._get_gemini_response(request)
+            ai_response = self._get_gemini_response(request)
         else:
-            return self._get_openai_response(request)
+            ai_response = self._get_openai_response(request)
+        
+        ai_message = ai_response.response
+        
+        # 4. Save AI message
+        ai_msg = ChatMessage(session_id=session_id, role=ChatRole.Assistant, content=ai_message)
+        self.chat_repo.create_message(ai_msg)
+        
+        return ChatResponse(response=ai_message, session_id=session_id)
+
+    def get_user_sessions(self, user: User):
+        return self.chat_repo.get_sessions_by_user_id(user.id)
+
+    def get_session_messages(self, session_id: int, user: User):
+        session = self.chat_repo.get_session_by_id(session_id)
+        if not session or session.user_id != user.id:
+            raise HTTPException(status_code=404, detail="Session not found")
+        return self.chat_repo.get_messages_by_session_id(session_id)
 
     def _get_openai_response(self, request: ChatRequest):
         try:
@@ -62,8 +93,6 @@ class ChatService:
         
     def _get_gemini_response(self, request: ChatRequest):
         try:
-            # Map history to Gemini format
-            # Gemini expects 'user' and 'model' roles
             history = []
             if request.history:
                 for msg in request.history:

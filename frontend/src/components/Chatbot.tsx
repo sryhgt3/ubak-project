@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Zap, Activity, Loader2, Cpu, BrainCircuit } from 'lucide-react';
+import { X, Send, Zap, Activity, Loader2, Cpu, BrainCircuit, History, Plus } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
@@ -10,6 +10,12 @@ interface ChatMessage {
   text: string;
   timestamp: number;
   isStreaming?: boolean;
+}
+
+interface ChatSession {
+    id: number;
+    title: string;
+    created_at: string;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8800';
@@ -43,56 +49,76 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [provider, setProvider] = useState<'openai' | 'gemini'>('gemini');
+  const [provider] = useState<'openai' | 'gemini'>('gemini');
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user, token } = useAuth(); // Get user and token from auth context
+  const { user, token } = useAuth();
 
-  // Load history on mount
+  // Load initial state or history sessions
   useEffect(() => {
-    const saved = localStorage.getItem('chatbot_history');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const cleanMessages = parsed.map((m: ChatMessage) => ({ ...m, isStreaming: false }));
-        setMessages(cleanMessages);
-      } catch (e) {
-        console.error("Failed to parse chat history");
-      }
-    } else {
-      setMessages([{
+    if (isOpen && token && user?.role === 'VIP') {
+        fetchSessions();
+    }
+  }, [isOpen, token, user]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Persist isOpen state
+  useEffect(() => {
+    localStorage.setItem('chatbot_isOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
+
+  const fetchSessions = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/chat/sessions`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        setSessions(response.data);
+    } catch (error) {
+        console.error("Failed to fetch chat sessions", error);
+    }
+  };
+
+  const loadSession = async (sessionId: number) => {
+    setIsTyping(true);
+    setCurrentSessionId(sessionId);
+    setShowHistory(false);
+    try {
+        const response = await axios.get(`${API_URL}/api/chat/sessions/${sessionId}/messages`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const mapped = response.data.map((m: any) => ({
+            id: m.id.toString(),
+            sender: m.role.toLowerCase() === 'user' ? 'user' : 'bot',
+            text: m.content,
+            timestamp: new Date(m.timestamp).getTime(),
+            isStreaming: false
+        }));
+        setMessages(mapped);
+    } catch (error) {
+        console.error("Failed to load session messages", error);
+        toast.error("Failed to load conversation history.");
+    } finally {
+        setIsTyping(false);
+    }
+  };
+
+  const startNewChat = () => {
+    setCurrentSessionId(null);
+    setMessages([{
         id: Date.now().toString(),
         sender: 'bot',
         text: 'Hi there! I am your UBAK assistant. How can I help you with your finances today?',
         timestamp: Date.now(),
         isStreaming: true
-      }]);
-    }
-    
-    // Default to gemini while OpenAI is offline
-    setProvider('gemini');
-  }, []);
-
-  useEffect(() => {
-    const hasStreaming = messages.some(m => m.isStreaming);
-    if (!hasStreaming && messages.length > 0) {
-      localStorage.setItem('chatbot_history', JSON.stringify(messages));
-    }
-    scrollToBottom();
-  }, [messages]);
-  
-  useEffect(() => {
-    localStorage.setItem('chatbot_provider', provider);
-  }, [provider]);
-
-  // Persist isOpen state
-  useEffect(() => {
-    localStorage.setItem('chatbot_isOpen', JSON.stringify(isOpen));
-  }, [isOpen]);
-
-  // Persist isOpen state
-  useEffect(() => {
-    localStorage.setItem('chatbot_isOpen', JSON.stringify(isOpen));
-  }, [isOpen]);
+    }]);
+    setShowHistory(false);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,14 +128,15 @@ const Chatbot: React.FC = () => {
     if (!inputValue.trim() || isTyping || messages.some(m => m.isStreaming)) return;
 
     if (user && user.role !== 'VIP') {
-      toast.error('You do not have permission to access the chatbot. This feature is for VIP users only.');
+      toast.error('This feature is for VIP users only.');
       return;
     }
 
+    const userMsgText = inputValue.trim();
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       sender: 'user',
-      text: inputValue.trim(),
+      text: userMsgText,
       timestamp: Date.now(),
       isStreaming: false
     };
@@ -119,47 +146,50 @@ const Chatbot: React.FC = () => {
     setIsTyping(true);
 
     try {
-    const history = messages.slice(-10).map(m => ({
-      role: m.sender === 'user' ? 'user' : 'assistant',
-      content: m.text
-    }));
+        const history = messages.slice(-10).map(m => ({
+            role: m.sender === 'user' ? 'user' : 'assistant',
+            content: m.text
+        }));
 
-    console.log('Chatbot request token:', token); // Debugging line
+        const response = await axios.post(`${API_URL}/api/chat/`, {
+            message: userMsgText,
+            history: history,
+            provider: provider,
+            session_id: currentSessionId
+        }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-    const response = await axios.post(`${API_URL}/api/chat/`, {
-      message: userMessage.text,
-      history: history,
-      provider: provider
-    }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+        const botResponseText = response.data.response;
+        const newSessionId = response.data.session_id;
 
-    setIsTyping(false);
+        if (!currentSessionId && newSessionId) {
+            setCurrentSessionId(newSessionId);
+            fetchSessions(); // Refresh session list
+        }
 
-    const botResponseText = response.data.response;
+        const botMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            sender: 'bot',
+            text: botResponseText,
+            timestamp: Date.now() + 1,
+            isStreaming: true
+        };
 
-    const botMessage: ChatMessage = {
-      id: (Date.now() + 1).toString(),
-      sender: 'bot',
-      text: botResponseText,
-      timestamp: Date.now() + 1,
-      isStreaming: true
-    };
-
-    setMessages(prev => [...prev, botMessage]);
-    } catch (error: any) { // Add : any to error type for better error handling
-    console.error("Chatbot API Error:", error.response || error.request || error.message); // Enhanced error logging
-    setIsTyping(false);
-
-    const errorMessage: ChatMessage = {
-      id: (Date.now() + 1).toString(),        sender: 'bot',
-        text: "Sorry, I'm having trouble connecting to my brain right now. Please try again later.",
-        timestamp: Date.now() + 1,
-        isStreaming: false
-      };
-      setMessages(prev => [...prev, errorMessage]);
+        setMessages(prev => [...prev, botMessage]);
+    } catch (error: any) {
+        console.error("Chatbot API Error:", error);
+        setIsTyping(false);
+        const errorMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            sender: 'bot',
+            text: "Sorry, I'm having trouble connecting to my brain right now. Please try again later.",
+            timestamp: Date.now() + 1,
+            isStreaming: false
+        };
+        setMessages(prev => [...prev, errorMessage]);
+    } finally {
+        setIsTyping(false);
     }
   };
 
@@ -173,33 +203,40 @@ const Chatbot: React.FC = () => {
     <>
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 sm:bottom-24 sm:right-6 w-full sm:w-96 h-full sm:h-[500px] sm:max-h-[80vh] bg-white dark:bg-[#0a0a0a] sm:rounded-[2rem] shadow-2xl flex flex-col z-[10000] border-t sm:border border-slate-200 dark:border-white/10 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 backdrop-blur-3xl">
+        <div className="fixed bottom-0 right-0 sm:bottom-24 sm:right-6 w-full sm:w-[400px] h-full sm:h-[550px] sm:max-h-[85vh] bg-white dark:bg-[#0a0a0a] sm:rounded-[2.5rem] shadow-2xl flex flex-col z-[10000] border-t sm:border border-slate-200 dark:border-white/10 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 backdrop-blur-3xl">
           {/* Header */}
-          <div className="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 p-4 flex justify-between items-center relative overflow-hidden">
+          <div className="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 p-4 flex justify-between items-center relative overflow-hidden shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 dark:bg-cyan-500/10 blur-2xl rounded-full pointer-events-none"></div>
             <div className="flex flex-col gap-1 relative z-10">
                 <div className="font-black text-[10px] flex items-center gap-2 text-slate-900 dark:text-white uppercase tracking-widest">
                 <div className="w-6 h-6 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg flex items-center justify-center border border-cyan-500/20">
                     <Activity size={12} />
                 </div>
-                Support Chat
+                UBAK AI
                 </div>
                 
-                {/* Provider Toggle */}
-                <div className="flex bg-slate-200/50 dark:bg-white/5 p-0.5 rounded-lg border border-slate-300/50 dark:border-white/10 w-fit">
+                <div className="flex items-center gap-2">
                     <button 
-                        disabled
-                        onClick={() => setProvider('openai')}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all opacity-40 cursor-not-allowed`}
+                        onClick={() => setShowHistory(!showHistory)}
+                        className={`p-1.5 rounded-lg transition-all ${showHistory ? 'bg-cyan-500 text-white' : 'bg-slate-200/50 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+                        title="History"
                     >
-                        <BrainCircuit size={10} /> OpenAI (Offline)
+                        <History size={14} />
                     </button>
-                    <button 
-                        onClick={() => setProvider('gemini')}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all ${provider === 'gemini' ? 'bg-white dark:bg-white/10 text-violet-600 dark:text-violet-400 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                        <Cpu size={10} /> Gemini
-                    </button>
+                    
+                    <div className="flex bg-slate-200/50 dark:bg-white/5 p-0.5 rounded-lg border border-slate-300/50 dark:border-white/10 w-fit">
+                        <button 
+                            disabled
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all opacity-40 cursor-not-allowed`}
+                        >
+                            <BrainCircuit size={10} /> OpenAI
+                        </button>
+                        <button 
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all bg-white dark:bg-white/10 text-violet-600 dark:text-violet-400 shadow-sm`}
+                        >
+                            <Cpu size={10} /> Gemini
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -211,48 +248,81 @@ const Chatbot: React.FC = () => {
             </button>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-slate-50/50 dark:bg-[#030303]/50 scroll-smooth">
-            {messages.map((msg) => (
-              <div 
-                key={msg.id} 
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div 
-                  className={`max-w-[85%] rounded-2xl p-4 text-[11px] md:text-xs font-bold leading-relaxed shadow-sm dark:shadow-lg ${
-                    msg.sender === 'user' 
-                      ? 'bg-gradient-to-br from-cyan-600 to-violet-600 dark:from-cyan-400 dark:to-violet-600 text-white rounded-tr-none shadow-md dark:shadow-[0_0_20px_rgba(34,211,238,0.1)]' 
-                      : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-tl-none border border-slate-200 dark:border-white/10'
-                  }`}
-                >
-                  {msg.sender === 'bot' && msg.isStreaming ? (
-                    <TypewriterMessage 
-                      text={msg.text} 
-                      onComplete={() => handleStreamingComplete(msg.id)} 
-                      speed={35} 
-                    />
-                  ) : (
-                    msg.text
-                  )}
+          <div className="flex-1 relative overflow-hidden flex flex-col">
+            {/* History Sidebar/Overlay */}
+            {showHistory && (
+                <div className="absolute inset-0 z-50 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-xl animate-in slide-in-from-left duration-300 p-6 flex flex-col">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-white">CONVERSATIONS</h3>
+                        <button onClick={startNewChat} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500 text-white text-[9px] font-black uppercase tracking-widest hover:bg-cyan-600 transition-all shadow-lg shadow-cyan-500/20">
+                            <Plus size={12} /> NEW CHAT
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-hide">
+                        {sessions.length > 0 ? sessions.map(session => (
+                            <button
+                                key={session.id}
+                                onClick={() => loadSession(session.id)}
+                                className={`w-full text-left p-4 rounded-2xl border transition-all text-[11px] font-bold uppercase tracking-tight group ${currentSessionId === session.id ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-600 dark:text-cyan-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-500 hover:border-slate-200 dark:hover:border-white/10 hover:text-slate-900 dark:hover:text-white'}`}
+                            >
+                                <p className="truncate mb-1">{session.title}</p>
+                                <p className="text-[8px] opacity-50 tracking-widest">
+                                    {new Date(session.created_at).toLocaleDateString()}
+                                </p>
+                            </button>
+                        )) : (
+                            <div className="h-full flex flex-col items-center justify-center text-center opacity-50 space-y-4">
+                                <History size={32} />
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No history yet</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-               <div className="flex justify-start animate-in fade-in">
-                 <div className="bg-white dark:bg-white/5 text-cyan-600 dark:text-cyan-400 rounded-2xl rounded-tl-none border border-slate-200 dark:border-white/10 p-4 shadow-sm dark:shadow-lg flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">
-                        {provider === 'openai' ? 'OpenAI' : 'Gemini'} is thinking...
-                    </span>
-                 </div>
-               </div>
             )}
-            <div ref={messagesEndRef} className="h-1" />
+
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-slate-50/50 dark:bg-[#030303]/50 scroll-smooth">
+                {messages.map((msg) => (
+                <div 
+                    key={msg.id} 
+                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                    <div 
+                    className={`max-w-[85%] rounded-2xl p-4 text-[11px] md:text-xs font-bold leading-relaxed shadow-sm dark:shadow-lg ${
+                        msg.sender === 'user' 
+                        ? 'bg-gradient-to-br from-cyan-600 to-violet-600 dark:from-cyan-400 dark:to-violet-600 text-white rounded-tr-none shadow-md dark:shadow-[0_0_20px_rgba(34,211,238,0.1)]' 
+                        : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-tl-none border border-slate-200 dark:border-white/10'
+                    }`}
+                    >
+                    {msg.sender === 'bot' && msg.isStreaming ? (
+                        <TypewriterMessage 
+                        text={msg.text} 
+                        onComplete={() => handleStreamingComplete(msg.id)} 
+                        speed={35} 
+                        />
+                    ) : (
+                        msg.text
+                    )}
+                    </div>
+                </div>
+                ))}
+                
+                {isTyping && (
+                <div className="flex justify-start animate-in fade-in">
+                    <div className="bg-white dark:bg-white/5 text-cyan-600 dark:text-cyan-400 rounded-2xl rounded-tl-none border border-slate-200 dark:border-white/10 p-4 shadow-sm dark:shadow-lg flex items-center gap-2">
+                        <Loader2 size={14} className="animate-spin" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">
+                            AI is thinking...
+                        </span>
+                    </div>
+                </div>
+                )}
+                <div ref={messagesEndRef} className="h-1" />
+            </div>
           </div>
 
           {/* Input Area */}
-          <div className="p-5 bg-white dark:bg-white/5 border-t border-slate-100 dark:border-white/5">
+          <div className="p-5 bg-white dark:bg-white/5 border-t border-slate-100 dark:border-white/5 shrink-0">
             <div className="flex gap-3">
               <input 
                 type="text"
@@ -266,7 +336,7 @@ const Chatbot: React.FC = () => {
               <button 
                 onClick={handleSend}
                 disabled={!inputValue.trim() || isTyping || messages.some(m => m.isStreaming)}
-                className={`p-3 rounded-xl hover:scale-105 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-lg ${provider === 'openai' ? 'bg-slate-900 dark:bg-white text-white dark:text-black dark:shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'bg-violet-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]'}`}
+                className={`p-3 rounded-xl hover:scale-105 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-lg bg-violet-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]`}
               >
                 <Send size={18} />
               </button>

@@ -1,8 +1,10 @@
 from fastapi import HTTPException
-from models import User, UserRole
-from schemas import ProfileUpdate, AccountCreate
+from models import User, UserRole, TransactionType, AccountType
+from schemas import ProfileUpdate, UserAccountCreate, AccountCreate, TransactionCreate
 from security import get_password_hash
 from repositories.user_repository import UserRepository
+from services.account_service import AccountService
+from services.transaction_service import TransactionService
 
 class UserService:
     def __init__(self, user_repo: UserRepository):
@@ -25,7 +27,13 @@ class UserService:
             "setup_completed": setup_completed
         }
 
-    def update_user_profile(self, update_data: ProfileUpdate, user: User):
+    def update_user_profile(
+        self, 
+        update_data: ProfileUpdate, 
+        user: User, 
+        account_service: AccountService,
+        transaction_service: TransactionService
+    ):
         if update_data.username:
             existing = self.user_repo.get_by_username_exclude_id(update_data.username, user.id)
             if existing:
@@ -38,6 +46,9 @@ class UserService:
                 raise HTTPException(status_code=400, detail="Email already taken")
             user.email = update_data.email
 
+        # Track if monthly_income was previously unset
+        was_setup_incomplete = user.monthly_income is None
+
         if update_data.monthly_income is not None:
             user.monthly_income = update_data.monthly_income
         if update_data.savings_goal is not None:
@@ -47,10 +58,43 @@ class UserService:
         if update_data.max_spending is not None:
             user.max_spending = update_data.max_spending
             
+        # Create or Initialize Main Wallet if setup is being completed
+        if user.monthly_income is not None and user.role != UserRole.Admin:
+            existing_accounts = account_service.get_user_accounts(user)
+            
+            def create_initial_transaction(account_id: int, amount: float):
+                init_tx = TransactionCreate(
+                    amount=amount,
+                    type=TransactionType.Income,
+                    category="Salary",
+                    description="Initial Monthly Income",
+                    account_id=account_id
+                )
+                transaction_service.create_transaction(init_tx, user)
+
+            if not existing_accounts:
+                main_account_data = AccountCreate(
+                    name="Main Wallet",
+                    type=AccountType.Cash,
+                    balance=0, # Start with 0 then let transaction service update it
+                    max_spending=user.max_spending
+                )
+                new_account = account_service.create_account(main_account_data, user)
+                create_initial_transaction(new_account.id, float(user.monthly_income))
+            elif was_setup_incomplete:
+                # For seeded users, seed_db.py might have already created a "Main Wallet" with 0 balance.
+                # If they are just now completing setup, we should initialize that wallet.
+                main_wallet = next((acc for acc in existing_accounts if acc.name == "Main Wallet"), None)
+                if main_wallet and main_wallet.balance == 0:
+                    if user.max_spending is not None:
+                        main_wallet.max_spending = user.max_spending
+                    # Update wallet via transaction to record it in charts
+                    create_initial_transaction(main_wallet.id, float(user.monthly_income))
+
         self.user_repo.commit_changes()
         return {"message": "Profile updated successfully"}
 
-    def create_new_account(self, account: AccountCreate, current_user: User):
+    def create_new_account(self, account: UserAccountCreate, current_user: User):
         if current_user.role != UserRole.Admin:
             raise HTTPException(status_code=403, detail="Not authorized")
         

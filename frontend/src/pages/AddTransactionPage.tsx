@@ -12,7 +12,8 @@ import {
   Loader2,
   CheckCircle2,
   Zap,
-  Target
+  Target,
+  Wallet
 } from 'lucide-react';
 
 const AddTransactionPage: React.FC = () => {
@@ -20,17 +21,32 @@ const AddTransactionPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [accounts, setAccounts] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
     amount: '',
     type: 'Expense',
     category: '',
-    description: ''
+    description: '',
+    account_id: ''
   });
 
   useEffect(() => {
-    // Component mounted
-  }, []);
+    const fetchAccounts = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/api/accounts`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAccounts(response.data);
+        if (response.data.length > 0) {
+          setFormData(prev => ({ ...prev, account_id: response.data[0].id.toString() }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch accounts", err);
+      }
+    };
+    if (token) fetchAccounts();
+  }, [token]);
 
   const categories = {
     Income: ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'],
@@ -39,10 +55,16 @@ const AddTransactionPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.account_id) {
+        toast.error("Please select a wallet/account.");
+        return;
+    }
+
     setIsSubmitting(true);
     const submissionData = {
       ...formData,
-      amount: parseFloat(formData.amount as string) || 0
+      amount: parseFloat(formData.amount as string) || 0,
+      account_id: parseInt(formData.account_id)
     };
 
     try {
@@ -122,6 +144,32 @@ const AddTransactionPage: React.FC = () => {
               >
                 <ArrowDownCircle className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" /> <span className="hidden sm:inline">Expense</span><span className="sm:hidden">Out</span>
               </button>
+            </div>
+
+            {/* Wallet Selection */}
+            <div className="space-y-2 md:space-y-3">
+              <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Select Wallet</label>
+              <div className="relative group/input">
+                <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-cyan-500 transition-colors">
+                  <Wallet className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" />
+                </span>
+                <select
+                  required
+                  value={formData.account_id}
+                  onChange={(e) => setFormData({...formData, account_id: e.target.value})}
+                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-4 pl-12 md:pl-14 pr-6 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-black text-[10px] md:text-xs uppercase tracking-widest appearance-none cursor-pointer text-slate-900 dark:text-white shadow-sm"
+                >
+                  {accounts.length === 0 ? (
+                    <option value="" disabled>LOADING WALLETS...</option>
+                  ) : (
+                    accounts.map(acc => (
+                      <option key={acc.id} value={acc.id} className="bg-white dark:bg-[#0a0a0a]">
+                        {acc.name.toUpperCase()} ({new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(acc.balance)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
             </div>
 
             {/* Amount */}

@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import AddTransactionPage from './pages/AddTransactionPage';
 import AddAccountPage from './pages/AddAccountPage';
+import AddWalletPage from './pages/AddWalletPage';
 import InflowPage from './pages/InflowPage';
 import OutflowPage from './pages/OutflowPage';
 
@@ -39,6 +40,7 @@ const App: React.FC = () => {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/add-transaction" element={<AddTransactionPage />} />
             <Route path="/add-account" element={<AddAccountPage />} />
+            <Route path="/add-wallet" element={<AddWalletPage />} />
             <Route path="/inflow" element={<InflowPage />} />
             <Route path="/outflow" element={<OutflowPage />} />
           </Route>

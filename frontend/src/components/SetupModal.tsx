@@ -39,7 +39,8 @@ const SetupModal: React.FC = () => {
     const submissionData = {
       ...formData,
       monthly_income: parseInt(formData.monthly_income) || 0,
-      max_spending: parseInt(formData.max_spending) || 0
+      max_spending: parseInt(formData.max_spending) || 0,
+      setup_completed: true
     };
 
     try {

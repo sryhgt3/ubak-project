@@ -5,47 +5,33 @@ This is the backend for the UBAK (UANG BIJAK) Web Application, built with FastAP
 ## Tech Stack
 - **FastAPI:** High-performance Python web framework.
 - **SQLAlchemy:** SQL Toolkit and Object-Relational Mapper.
-- **PostgreSQL:** Primary database for user data.
-- **Bcrypt:** Secure password hashing.
-- **Jose (python-jose):** JWT token generation and validation.
+- **PostgreSQL:** Primary database.
+- **AI Integration:** Support for OpenAI (GPT-4o Mini) and Gemini (1.5 Flash).
+- **Security:** Bcrypt hashing & JWT (python-jose).
 
-## Local Setup (without Docker)
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Configure environment variables in `.env`.
-5. Run the application:
-   ```bash
-   uvicorn main:app --reload
-   ```
+## New Features (v1.1.0)
+- **Account/Wallet System:** Managed via `AccountRepository` and `AccountService`. Tracks balances across different types (Bank, EWallet, Cash).
+- **Chat History:** Persistent storage for AI conversations using `ChatSession` and `ChatMessage` models.
+- **Transactional Balance:** Creating a transaction now automatically updates the associated account's balance.
 
-## Database Seeding
-To populate the database with default accounts (Admin, VIP, and Free), run:
+## Database Seeding & Migration
+The seeding script has been updated to handle multi-wallet migrations.
+
 ```bash
-python seed_db.py
-```
-Or if using Docker:
-```bash
+# Run seeding (using local venv)
+backend/venv/bin/python backend/seed_db.py
+
+# Or via Docker
 docker exec -it ubak_backend python seed_db.py
 ```
 
-### Environment Modes
-The seeder behavior changes based on the `ENVIRONMENT` variable in your `.env` file:
+### Seeding Logic:
+1.  **Users**: Creates Admin, VIP, and Free accounts.
+2.  **Wallets**: Ensures every user has at least one "Main Wallet".
+3.  **Migration**: Automatically links existing transactions with `NULL` account_id to the user's Main Wallet.
 
-- **Development (`ENVIRONMENT=development`):**
-  - Seeds all 3 accounts.
-  - If `DEFAULT_PASSWORD` variables are missing, it uses defaults (e.g., `UbakAdmin123`).
-- **Production (`ENVIRONMENT=production`):**
-  - Seeds all 3 accounts.
-  - **MANDATORY:** You must set `DEFAULT_ADMIN_PASSWORD`, `DEFAULT_VIP_PASSWORD`, and `DEFAULT_FREE_PASSWORD` in your `.env`.
-  - The seeder will abort if these are not set, preventing the use of insecure default passwords on a live server.
+## Environment Variables
+Ensure your `.env` includes:
+- `DATABASE_URL`
+- `OPENAI_API_KEY` & `GEMINI_API_KEY`
+- `SECRET_KEY` & `ALGORITHM`

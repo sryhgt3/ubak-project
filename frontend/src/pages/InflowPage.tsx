@@ -7,36 +7,57 @@ import {
   Search,
   ArrowLeft,
   Zap,
-  ArrowUpRight
+  ArrowUpRight,
+  Wallet as WalletIcon
 } from 'lucide-react';
 
 const InflowPage: React.FC = () => {
   const { token, logout, isLoading } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
   const [isFetching, setIsFetching] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/transactions`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const inflowOnly = response.data.filter((t: any) => t.type === 'Income');
-        setTransactions(inflowOnly);
-      } catch (err: any) {
-        if (err.response?.status === 401) {
-          logout();
-          navigate('/login');
-        }
-      } finally {
-        setIsFetching(false);
-      }
-    };
+  const fetchAccounts = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/api/accounts/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAccounts(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    if (token) fetchTransactions();
-  }, [token, navigate, logout]);
+  const fetchTransactions = async () => {
+    setIsFetching(true);
+    try {
+      let url = `${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/transactions?type=Income`;
+      if (selectedAccountId !== 'all') {
+        url += `&account_id=${selectedAccountId}`;
+      }
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTransactions(response.data);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        logout();
+        navigate('/login');
+      }
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchAccounts();
+      fetchTransactions();
+    }
+  }, [token, selectedAccountId]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -88,17 +109,35 @@ const InflowPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative group w-full md:w-96">
-          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-600 transition-colors">
-            <Search className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" />
-          </span>
-          <input 
-            type="text"
-            placeholder="SEARCH TRANSACTIONS..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white/80 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-6 focus:ring-1 focus:ring-cyan-500/30 outline-none transition-all text-[10px] md:text-xs font-black tracking-widest uppercase placeholder:text-slate-400 dark:placeholder:text-slate-600 text-slate-800 dark:text-white shadow-sm dark:shadow-2xl backdrop-blur-md"
-          />
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="relative group w-full md:w-64">
+            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-600 transition-colors pointer-events-none">
+              <WalletIcon size={16} />
+            </span>
+            <select
+              value={selectedAccountId}
+              onChange={(e) => setSelectedAccountId(e.target.value)}
+              className="w-full bg-white/80 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-2xl py-3.5 md:py-4 pl-12 pr-6 focus:ring-1 focus:ring-cyan-500/30 outline-none transition-all text-[10px] md:text-xs font-black tracking-widest uppercase text-slate-800 dark:text-white shadow-sm dark:shadow-2xl backdrop-blur-md appearance-none cursor-pointer"
+            >
+              <option value="all" className="bg-white dark:bg-[#0a0a0a]">All Wallets</option>
+              {accounts.map(acc => (
+                <option key={acc.id} value={acc.id} className="bg-white dark:bg-[#0a0a0a]">{acc.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="relative group w-full md:w-80">
+            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-600 transition-colors">
+              <Search className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" />
+            </span>
+            <input 
+              type="text"
+              placeholder="SEARCH..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/80 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-6 focus:ring-1 focus:ring-cyan-500/30 outline-none transition-all text-[10px] md:text-xs font-black tracking-widest uppercase placeholder:text-slate-400 dark:placeholder:text-slate-600 text-slate-800 dark:text-white shadow-sm dark:shadow-2xl backdrop-blur-md"
+            />
+          </div>
         </div>
       </div>
 

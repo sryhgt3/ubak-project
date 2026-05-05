@@ -1,10 +1,11 @@
 # 💰 UBAK PRO - Smart Financial Tracker
 
-![Version](https://img.shields.io/badge/version-1.0.0-rose)
+![Version](https://img.shields.io/badge/version-1.1.0-rose)
 ![React](https://img.shields.io/badge/Frontend-React%20%7C%20TS-blue)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-emerald)
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 ![Docker](https://img.shields.io/badge/Deployment-Docker-blue)
+![AI](https://img.shields.io/badge/AI-Gemini%20%7C%20OpenAI-violet)
 
 **UBAK PRO** adalah platform manajemen keuangan cerdas yang dirancang untuk membantu Anda melacak pendapatan, mengelola pengeluaran, dan mencapai target tabungan impian dengan antarmuka yang modern, cepat, dan elegan.
 
@@ -12,22 +13,33 @@
 
 ## ✨ Fitur Unggulan
 
+### 🏦 Multi-Wallet Management (NEW!)
+- **Smart Onboarding**: Pemasukan bulanan saat setup awal otomatis masuk ke **"Main Wallet"**.
+- **Flexible Wallets**: Tambah, edit, dan hapus dompet dengan tipe **Bank, E-Wallet, atau Cash**.
+- **Unique Name Constraint**: Menghindari kebingungan dengan sistem nama dompet unik per pengguna.
+- **Dynamic Dashboard**: Klik pada kartu dompet untuk memfilter seluruh dashboard (Saldo, Analytics, & Transaksi Terakhir).
+- **All-In-One Summary**: Mode "All Wallets" untuk melihat total akumulasi seluruh aset dan pengeluaran Anda.
+
+### 📊 Per-Wallet Insights
+- **Filtered Logs**: Halaman Income & Expense kini dilengkapi dropdown untuk memfilter histori berdasarkan dompet tertentu.
+- **Visual Analytics**: Grafik perbandingan pendapatan vs pengeluaran yang menyesuaikan dengan dompet yang dipilih.
+- **Real-time Balance**: Saldo dompet diupdate secara otomatis setiap kali ada transaksi (Income/Expense).
+
+### 🤖 Smart AI Financial Assistant (NEW!)
+- **UBAK AI**: Konsultan keuangan pribadi berbasis AI (OpenAI & Gemini).
+- **Persistent Chat History**: Riwayat percakapan tersimpan secara otomatis di database.
+- Fitur eksklusif untuk pengguna **VIP**.
+
 ### 🛡️ Role-Based Access Control (RBAC)
-Sistem akses yang aman dengan tiga level pengguna:
 - **Admin**: Akses penuh ke konsol administratif dan manajemen sistem.
-- **VIP**: Fitur eksklusif, prioritas sistem, dan tanpa batas akses.
+- **VIP**: Fitur eksklusif, AI Chatbot dengan riwayat, dan Multi-Wallet.
 - **Free**: Fitur dasar pelacakan keuangan untuk pengguna umum.
 
 ### 🚀 Modern User Experience
-- **Smooth Navigation**: Sidebar interaktif dengan animasi *cubic-bezier* yang sangat halus.
-- **Responsive Design**: Tampilan yang dioptimalkan untuk Desktop dan Mobile (Mobile Drawer).
-- **Onboarding Stepper**: Proses setup awal wajib yang interaktif untuk membantu Anda menetapkan tujuan finansial (Pemasukan, Goal Nabung, Barang Impian, & Limit Belanja).
-- **Glassmorphism UI**: Antarmuka modern menggunakan efek blur dan gradien yang memanjakan mata.
-
-### 📊 Dashboard Cerdas
-- Visualisasi data yang bersih.
-- Pelacakan metrik sistem untuk Admin.
-- Ringkasan aset eksklusif untuk VIP.
+- **Smooth Navigation**: Sidebar interaktif dengan animasi *cubic-bezier*.
+- **Responsive Design**: Dioptimalkan untuk Desktop dan Mobile.
+- **Onboarding Stepper**: Setup awal wajib (Pemasukan, Goal Nabung, Limit Belanja).
+- **Glassmorphism UI**: Antarmuka modern menggunakan efek blur dan gradien.
 
 ---
 
@@ -38,68 +50,34 @@ Sistem akses yang aman dengan tiga level pengguna:
 - **Tailwind CSS** (Styling)
 - **Lucide React** (Icons)
 - **Vite** (Build Tool)
+- **Recharts** (Visualisasi Data)
 
 ### Backend
 - **FastAPI** (Python High Performance)
 - **SQLAlchemy** (ORM)
 - **PostgreSQL** (Database)
-- **Jose / JWT** (Authentication)
-- **Bcrypt** (Password Hashing)
+- **AI Integration**: Gemini 1.5 Flash & GPT-4o Mini.
 
 ---
 
 ## 🚀 Cara Menjalankan Project
 
-This project can be run in two modes: **Production** (fully containerized) and **Development** (hybrid).
-
 ### 1. Production Mode
-
-This mode is recommended for deployment or for running the application as a complete, self-contained unit. It builds the frontend into static files and serves everything via Docker.
-
-**Steps:**
-1.  Run the main Docker Compose command:
-    ```bash
-    docker-compose -f docker-compose-prod.yml up -d --build
-    ```
-2.  (First time only) Seed the database to create default user accounts:
-    ```bash
-    docker exec -it ubak_backend python seed_db.py
-    ```
-
-**Endpoints:**
-- **Application**: `http://localhost:3001`
-- **Backend API Docs**: `http://localhost:8800/docs`
-- **pgAdmin**: `http://localhost:5050`
-
+```bash
+docker-compose -f docker-compose-prod.yml up -d --build
+# Seed & Migrasi Database
+docker exec -it ubak_backend python seed_db.py
+```
 
 ### 2. Development Mode
-
-This mode is recommended for active development on the frontend. The frontend runs on your local machine with hot-reloading, while the backend and database run in Docker.
-
-**Steps:**
-1.  **Create Frontend Environment File:** Create a file named `.env` inside the `frontend` directory (`frontend/.env`) with the following content:
-    ```
-    VITE_API_URL=http://localhost:8800
-    ```
-2.  **Start Backend Services:** In your project's root directory, run the development Docker Compose file in detached mode:
-    ```bash
-    docker-compose up -d
-    ```
-3.  **(First time only) Seed the database to create default user accounts:**
-    ```bash
-    docker exec -it ubak_backend_dev python seed_db.py
-    ```
-4.  **Start Frontend Service:** In a **separate terminal**, navigate to the `frontend` directory and start the dev server:
+1.  **Backend & DB**: `docker-compose up -d`
+2.  **Seed Database**: `docker exec -it ubak_backend_dev python seed_db.py`
+3.  **Frontend**:
     ```bash
     cd frontend
     npm install
     npm run dev
     ```
-
-**Endpoints:**
-- **Application (Dev)**: `http://localhost:3001` (as configured in `vite.config.ts`)
-- **Backend API Docs**: `http://localhost:8800/docs`
-- **pgAdmin**: `http://localhost:5050`
 
 ---
 
@@ -113,17 +91,18 @@ This mode is recommended for active development on the frontend. The frontend ru
 
 ---
 
-## 📝 Konfigurasi Database
+## 📝 Catatan Migrasi Database v1.1.0
 
-Jika Anda melakukan update manual pada database yang sudah ada, pastikan untuk menjalankan migrasi kolom baru:
+Jika Anda mengupgrade dari versi lama, jalankan script `migrate_db.py` (jika tersedia) atau jalankan query berikut untuk mendukung fitur Multi-Wallet dan AI History:
 
 ```sql
-ALTER TABLE users ADD COLUMN monthly_income INTEGER;
-ALTER TABLE users ADD COLUMN savings_goal VARCHAR;
-ALTER TABLE users ADD COLUMN dream_item VARCHAR;
-ALTER TABLE users ADD COLUMN max_spending INTEGER;
-```
+-- Tabel Baru
+CREATE TABLE accounts (...);
+CREATE TABLE chat_sessions (...);
+CREATE TABLE chat_messages (...);
 
----
+-- Update Transaksi
+ALTER TABLE transactions ADD COLUMN account_id INTEGER REFERENCES accounts(id);
+```
 
 Developed with ❤️ for better financial future.

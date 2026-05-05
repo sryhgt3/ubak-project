@@ -2,9 +2,15 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from dependencies import get_db, get_current_user
 from models import User
-from schemas import UserOut, ProfileUpdate, UserSummary, AccountCreate
+from schemas import UserOut, ProfileUpdate, UserSummary, UserAccountCreate
 from services.user_service import UserService
 from repositories.user_repository import UserRepository
+
+from services.account_service import AccountService
+from repositories.account_repository import AccountRepository
+
+from services.transaction_service import TransactionService
+from repositories.transaction_repository import TransactionRepository
 
 router = APIRouter(tags=["users"])
 
@@ -13,6 +19,21 @@ def get_user_repository(db: Session = Depends(get_db)):
 
 def get_user_service(user_repo: UserRepository = Depends(get_user_repository)):
     return UserService(user_repo)
+
+def get_account_repository(db: Session = Depends(get_db)):
+    return AccountRepository(db)
+
+def get_account_service(account_repo: AccountRepository = Depends(get_account_repository)):
+    return AccountService(account_repo)
+
+def get_transaction_repository(db: Session = Depends(get_db)):
+    return TransactionRepository(db)
+
+def get_transaction_service(
+    tx_repo: TransactionRepository = Depends(get_transaction_repository),
+    account_repo: AccountRepository = Depends(get_account_repository)
+):
+    return TransactionService(tx_repo, account_repo)
 
 @router.get("/me", response_model=UserOut)
 async def get_me(
@@ -25,13 +46,15 @@ async def get_me(
 async def update_me(
     update_data: ProfileUpdate, 
     current_user: User = Depends(get_current_user), 
-    service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
+    account_service: AccountService = Depends(get_account_service),
+    transaction_service: TransactionService = Depends(get_transaction_service)
 ):
-    return service.update_user_profile(update_data, current_user)
+    return user_service.update_user_profile(update_data, current_user, account_service, transaction_service)
 
 @router.post("/accounts", response_model=UserSummary)
 async def create_account(
-    account: AccountCreate, 
+    account: UserAccountCreate, 
     current_user: User = Depends(get_current_user), 
     service: UserService = Depends(get_user_service)
 ):

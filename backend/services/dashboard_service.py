@@ -2,21 +2,38 @@ from models import User, TransactionType, UserRole
 from schemas import UserSummary
 from repositories.user_repository import UserRepository
 from repositories.transaction_repository import TransactionRepository
+from repositories.account_repository import AccountRepository
 
 class DashboardService:
-    def __init__(self, user_repo: UserRepository, transaction_repo: TransactionRepository):
+    def __init__(self, user_repo: UserRepository, transaction_repo: TransactionRepository, account_repo: AccountRepository):
         self.user_repo = user_repo
         self.transaction_repo = transaction_repo
+        self.account_repo = account_repo
 
-    def get_dashboard_data(self, current_user: User):
-        transactions = self.transaction_repo.get_by_user_id(current_user.id)
+    def get_dashboard_data(self, current_user: User, account_id: int = None):
+        if account_id:
+            transactions = self.transaction_repo.get_by_account_id(account_id)
+            # Verify account belongs to user
+            account = self.account_repo.get_by_id(account_id)
+            if not account or account.user_id != current_user.id:
+                # Fallback to all if invalid
+                transactions = self.transaction_repo.get_by_user_id(current_user.id)
+                total_balance = sum(acc.balance for acc in self.account_repo.get_by_user_id(current_user.id))
+            else:
+                total_balance = account.balance
+        else:
+            transactions = self.transaction_repo.get_by_user_id(current_user.id)
+            total_balance = sum(acc.balance for acc in self.account_repo.get_by_user_id(current_user.id))
+
+        accounts = self.account_repo.get_by_user_id(current_user.id)
         
         total_income = sum(t.amount for t in transactions if t.type == TransactionType.Income)
         total_expenses = sum(t.amount for t in transactions if t.type == TransactionType.Expense)
         
-        total_balance = float(current_user.monthly_income or 0) + total_income - total_expenses
-
-        recent = self.transaction_repo.get_recent_by_user_id(current_user.id, limit=10)
+        if account_id:
+            recent = [t for t in transactions][:10] # Simplified for now
+        else:
+            recent = self.transaction_repo.get_recent_by_user_id(current_user.id, limit=10)
 
         data = {
             "username": current_user.username,
@@ -27,6 +44,7 @@ class DashboardService:
             "total_income": total_income,
             "total_expenses": total_expenses,
             "recent_transactions": recent,
+            "accounts": accounts,
             "message": f"Welcome back, {current_user.username}!"
         }
         

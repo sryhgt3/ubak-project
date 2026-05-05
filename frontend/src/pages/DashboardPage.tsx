@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { 
   ResponsiveContainer, BarChart, Bar, AreaChart, Area, XAxis, Tooltip, Cell 
 } from 'recharts';
@@ -19,7 +20,14 @@ import {
   Activity,
   Zap,
   ArrowUpRight,
-  Wallet
+  Wallet,
+  CreditCard,
+  Banknote,
+  Coins,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  X
 } from 'lucide-react';
 
 const Skeleton = ({ className }: { className?: string }) => (
@@ -54,7 +62,36 @@ const DashboardPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isFetching, setIsFetching] = useState(true);
   const [chartView, setChartView] = useState<'comparison' | 'income' | 'expense'>('comparison');
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
+  
+  // Edit wallet state
+  const [isEditing, setIsEditing] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ name: '', type: '', max_spending: '' });
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const navigate = useNavigate();
+
+  const fetchDashboard = async (accountId: number | null = selectedAccountId) => {
+    setIsFetching(true);
+    try {
+      let url = `${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/dashboard`;
+      if (accountId) url += `?account_id=${accountId}`;
+      
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDashboardData(response.data);
+    } catch (err: any) {
+      setError('Failed to fetch dashboard data. Your session may have expired.');
+      if (err.response?.status === 401) {
+        logout();
+        navigate('/login');
+      }
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   useEffect(() => {
     if (!isLoading && !token) {
@@ -62,25 +99,93 @@ const DashboardPage: React.FC = () => {
       return;
     }
 
-    const fetchDashboard = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/dashboard`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setDashboardData(response.data);
-      } catch (err: any) {
-        setError('Failed to fetch dashboard data. Your session may have expired.');
-        if (err.response?.status === 401) {
-          logout();
-          navigate('/login');
-        }
-      } finally {
-        setIsFetching(false);
-      }
-    };
+    if (token) fetchDashboard(selectedAccountId);
+  }, [token, isLoading, navigate, logout, selectedAccountId, user?.setup_completed]);
 
-    if (token) fetchDashboard();
-  }, [token, isLoading, navigate, logout]);
+  const handleDeleteWallet = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this wallet? All associated transactions will be lost.")) return;
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/api/accounts/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (selectedAccountId === id) setSelectedAccountId(null);
+      fetchDashboard(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateWallet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/api/accounts/${isEditing.id}`, editForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIsEditing(null);
+      fetchDashboard(selectedAccountId);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const healthData = useMemo(() => {
+    if (!dashboardData) return null;
+    const income = dashboardData.total_income || 0;
+    const expense = dashboardData.total_expenses || 0;
+    
+    // Ratio = (Income / Expense) * 100
+    const ratio = expense === 0 ? (income > 0 ? 101 : 100) : (income / expense) * 100;
+    
+    if (ratio > 100) {
+      return {
+        lottie: "https://lottie.host/05bae99e-3f32-4287-a351-2b85cc3e95d6/HqGUcCGvMm.lottie",
+        color: "text-emerald-500",
+        bg: "bg-emerald-500/10",
+        border: "border-emerald-500/20",
+        insight: "Kamu sedang dalam kondisi keuangan sehat",
+        label: "Sehat"
+      };
+    } else if (ratio >= 80) {
+      return {
+        lottie: "https://lottie.host/0527b941-d001-4b2c-8af2-82b5e3f51f52/eZPpWnp7jx.lottie",
+        color: "text-cyan-500",
+        bg: "bg-cyan-500/10",
+        border: "border-cyan-500/20",
+        insight: "Pengeluaran dan pemasukan seimbang",
+        label: "Sehat"
+      };
+    } else if (ratio >= 60) {
+      return {
+        lottie: "https://lottie.host/75c8ab58-3c1a-4a59-93d9-4e428aca185f/2rEXL2OBGF.lottie",
+        color: "text-amber-500",
+        bg: "bg-amber-500/10",
+        border: "border-amber-500/20",
+        insight: "Perlu mengurangi pengeluaran 20%",
+        label: "Warning"
+      };
+    } else if (ratio >= 40) {
+      return {
+        lottie: "https://lottie.host/6783cb59-59ef-493c-ace9-bba15d7d8426/4ILlmFjW5Y.lottie",
+        color: "text-rose-400",
+        bg: "bg-rose-400/10",
+        border: "border-rose-400/20",
+        insight: "Pengeluaran kamu terlalu tinggi",
+        label: "Danger"
+      };
+    } else {
+      return {
+        lottie: "https://lottie.host/6783cb59-59ef-493c-ace9-bba15d7d8426/4ILlmFjW5Y.lottie",
+        color: "text-rose-600",
+        bg: "bg-rose-600/10",
+        border: "border-rose-600/20",
+        insight: "Kondisi keuangan kritis, kurangi pengeluaran!",
+        label: "Danger"
+      };
+    }
+  }, [dashboardData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -101,6 +206,14 @@ const DashboardPage: React.FC = () => {
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+  };
+
+  const getWalletIcon = (type: string) => {
+    switch(type) {
+      case 'Bank': return <CreditCard size={18} />;
+      case 'EWallet': return <Banknote size={18} />;
+      default: return <Coins size={18} />;
+    }
   };
 
   // ADMIN DASHBOARD
@@ -206,11 +319,21 @@ const DashboardPage: React.FC = () => {
             <Zap size={12} fill="currentColor" /> Live Dashboard
           </div>
           <h1 className="text-4xl md:text-7xl font-black tracking-tighter leading-[0.9] text-slate-900 dark:text-white uppercase">
-            HI, {user?.username}<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">.</span>
+            {selectedAccountId ? dashboardData?.accounts?.find((a:any) => a.id === selectedAccountId)?.name : "OVERVIEW"}<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">.</span>
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-sm font-medium">Here is what is happening with your money today.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-sm font-medium">
+            {selectedAccountId ? `Showing data for ${dashboardData?.accounts?.find((a:any) => a.id === selectedAccountId)?.name}` : `Hi ${user?.username}, here is what is happening with your money today.`}
+          </p>
         </div>
         <div className="flex gap-4">
+          {selectedAccountId && (
+            <button 
+              onClick={() => setSelectedAccountId(null)}
+              className="bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
+            >
+              All Wallets
+            </button>
+          )}
           <button 
             onClick={() => navigate('/add-transaction')}
             className="w-full md:w-auto bg-slate-900 dark:bg-white text-white dark:text-black px-6 md:px-8 py-3 md:py-4 rounded-full text-sm font-black shadow-lg dark:shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-xl dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
@@ -247,12 +370,12 @@ const DashboardPage: React.FC = () => {
                  </h2>
               </div>
               
-              <div className="flex flex-wrap items-center gap-3 md:gap-4 pt-8 md:pt-12">
-                 <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-black text-[10px] md:text-sm bg-cyan-500/5 dark:bg-cyan-500/10 px-4 md:px-5 py-2 md:py-3 rounded-full border border-cyan-500/10 dark:border-cyan-500/20 backdrop-blur-md shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.15)]">
-                    <ArrowUpRight size={14} /> INCOME {formatCurrency(dashboardData?.total_income || 0)}
+              <div className="flex flex-row items-center gap-2 md:gap-4 pt-8 md:pt-12 overflow-x-auto scrollbar-hide pb-2">
+                 <div className="flex items-center gap-1.5 md:gap-2 text-cyan-600 dark:text-cyan-400 font-black text-[8px] sm:text-[10px] md:text-sm bg-cyan-500/5 dark:bg-cyan-500/10 px-3 md:px-5 py-2 md:py-3 rounded-full border border-cyan-500/10 dark:border-cyan-500/20 backdrop-blur-md shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.15)] whitespace-nowrap shrink-0">
+                    <ArrowUpRight size={14} className="shrink-0" /> <span className="hidden xs:inline">INCOME </span>{formatCurrency(dashboardData?.total_income || 0)}
                  </div>
-                 <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 font-black text-[10px] md:text-sm bg-violet-500/5 dark:bg-violet-500/10 px-4 md:px-5 py-2 md:py-3 rounded-full border border-violet-500/10 dark:border-violet-500/20 backdrop-blur-md shadow-sm dark:shadow-[0_0_20px_rgba(139,92,246,0.15)]">
-                    <ArrowDownCircle size={14} /> EXPENSES {formatCurrency(dashboardData?.total_expenses || 0)}
+                 <div className="flex items-center gap-1.5 md:gap-2 text-violet-600 dark:text-violet-400 font-black text-[8px] sm:text-[10px] md:text-sm bg-violet-500/5 dark:bg-violet-500/10 px-3 md:px-5 py-2 md:py-3 rounded-full border border-violet-500/10 dark:border-violet-500/20 backdrop-blur-md shadow-sm dark:shadow-[0_0_20px_rgba(139,92,246,0.15)] whitespace-nowrap shrink-0">
+                    <ArrowDownCircle size={14} className="shrink-0" /> <span className="hidden xs:inline">EXPENSES </span>{formatCurrency(dashboardData?.total_expenses || 0)}
                  </div>
               </div>
             </div>
@@ -260,6 +383,24 @@ const DashboardPage: React.FC = () => {
 
           {/* Workload / Targets Widget */}
           <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
+             {healthData && (
+                <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-5 md:p-6 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex items-center gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 group">
+                    <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 relative z-10">
+                        <DotLottieReact src={healthData.lottie} loop autoplay />
+                    </div>
+                    <div className="relative z-10">
+                        <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${healthData.bg} ${healthData.color} ${healthData.border} border text-[8px] font-black uppercase tracking-widest mb-1.5`}>
+                            <div className={`w-1 h-1 rounded-full bg-current animate-pulse`} />
+                            KONDISI {healthData.label}
+                        </div>
+                        <p className="text-[10px] md:text-xs font-bold text-slate-800 dark:text-white leading-tight uppercase tracking-tight italic">
+                            "{healthData.insight}"
+                        </p>
+                    </div>
+                    <div className={`absolute -right-4 -bottom-4 w-24 h-24 ${healthData.bg} blur-3xl rounded-full opacity-50`}></div>
+                </motion.div>
+             )}
+
              <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex flex-col justify-center min-h-[140px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 hover:border-cyan-500/30 group">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 dark:bg-cyan-500/20 blur-2xl rounded-full group-hover:bg-cyan-500/30 transition-colors pointer-events-none"></div>
                 <div className="bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 p-2.5 rounded-xl w-fit mb-4 relative z-10 border border-cyan-500/20">
@@ -281,7 +422,169 @@ const DashboardPage: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Deep Analytics Section */}
+      {/* Wallets Section */}
+      {!isFetching && dashboardData?.accounts && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Your Wallets</h3>
+            <button className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 hover:underline transition-all">MANAGE WALLETS</button>
+          </div>
+          <div className="flex flex-col md:flex-row gap-4 md:overflow-x-auto pb-6 scrollbar-hide px-1">
+            {/* All Wallets Card */}
+            <motion.div
+                whileHover={{ y: -4 }}
+                onClick={() => setSelectedAccountId(null)}
+                className={`w-full md:w-[280px] p-5 md:p-6 rounded-[2rem] border transition-all cursor-pointer relative overflow-hidden group shrink-0 ${
+                    selectedAccountId === null 
+                    ? 'bg-gradient-to-br from-cyan-600 to-violet-600 text-white border-transparent shadow-xl dark:shadow-[0_20px_40px_rgba(34,211,238,0.2)]' 
+                    : 'bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border-white/50 dark:border-white/10 text-slate-900 dark:text-white hover:border-cyan-500/50'
+                }`}
+            >
+                <div className="flex items-center justify-between mb-4 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-2xl ${selectedAccountId === null ? 'bg-white/20' : 'bg-slate-50 dark:bg-white/5 shadow-inner'}`}>
+                        <Wallet size={20} />
+                    </div>
+                    <div>
+                        <h4 className="font-black text-sm md:text-xs uppercase tracking-tight">All Wallets</h4>
+                        <span className={`text-[9px] font-bold uppercase tracking-widest ${selectedAccountId === null ? 'text-white/60' : 'text-slate-400'}`}>Total Summary</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right md:hidden">
+                    <p className={`text-base font-black tracking-tighter ${selectedAccountId === null ? 'text-white' : 'text-cyan-600 dark:text-cyan-400'}`}>
+                        {formatCurrency(dashboardData?.accounts?.reduce((acc: number, curr: any) => acc + curr.balance, 0) || 0)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="hidden md:block mt-6 relative z-10">
+                    <p className={`text-2xl font-black tracking-tighter ${selectedAccountId === null ? 'text-white' : 'text-cyan-600 dark:text-cyan-400'}`}>
+                        {formatCurrency(dashboardData?.accounts?.reduce((acc: number, curr: any) => acc + curr.balance, 0) || 0)}
+                    </p>
+                </div>
+            </motion.div>
+
+            {dashboardData.accounts.map((acc: any) => (
+              <motion.div
+                key={acc.id}
+                whileHover={{ y: -4 }}
+                onClick={() => setSelectedAccountId(acc.id)}
+                className={`w-full md:w-[280px] p-5 md:p-6 rounded-[2rem] border transition-all cursor-pointer relative group shrink-0 ${
+                    selectedAccountId === acc.id 
+                    ? 'bg-gradient-to-br from-cyan-600/80 to-violet-600/80 text-white border-transparent shadow-xl dark:shadow-[0_20px_40px_rgba(34,211,238,0.15)]' 
+                    : 'bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border-white/50 dark:border-white/10 text-slate-900 dark:text-white hover:border-cyan-500/50'
+                }`}
+              >
+                <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
+                    <div className={`absolute -right-4 -top-4 w-24 h-24 blur-2xl rounded-full transition-colors ${selectedAccountId === acc.id ? 'bg-white/20' : 'bg-cyan-500/5 group-hover:bg-cyan-500/10'}`}></div>
+                </div>
+
+                <div className="flex items-center justify-between mb-4 relative z-20">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-2xl ${selectedAccountId === acc.id ? 'bg-white/20' : 'bg-slate-50 dark:bg-white/5 shadow-inner'}`}>
+                        {getWalletIcon(acc.type)}
+                    </div>
+                    <div>
+                        <h4 className="font-black text-sm md:text-xs uppercase tracking-tight">{acc.name}</h4>
+                        <div className="flex items-center gap-2">
+                          <p className={`text-[9px] font-bold uppercase tracking-widest ${selectedAccountId === acc.id ? 'text-white/60' : 'text-slate-400'}`}>{acc.type}</p>
+                          {acc.max_spending > 0 && (
+                            <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${selectedAccountId === acc.id ? 'bg-white/20 text-white' : 'bg-rose-500/10 text-rose-500'}`}>
+                                <Activity size={8} /> {formatCurrency(acc.max_spending)}
+                            </div>
+                          )}
+                        </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="text-right md:hidden">
+                        <p className={`text-base font-black tracking-tighter ${selectedAccountId === acc.id ? 'text-white' : 'text-cyan-600 dark:text-cyan-400'}`}>
+                        {formatCurrency(acc.balance)}
+                        </p>
+                    </div>
+                    <div className="relative z-30">
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(activeMenuId === acc.id ? null : acc.id);
+                            }}
+                            className={`p-2 rounded-xl transition-colors ${selectedAccountId === acc.id ? 'hover:bg-white/20 text-white/70' : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400'}`}
+                        >
+                            <MoreVertical size={16} />
+                        </button>
+                        
+                        <AnimatePresence>
+                            {activeMenuId === acc.id && (
+                                <>
+                                    <div 
+                                        className="fixed inset-0 z-[90]" 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveMenuId(null);
+                                        }}
+                                    />
+                                    <motion.div 
+                                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                        className="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 py-2 z-[100] backdrop-blur-xl"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <button 
+                                            onClick={() => {
+                                                setIsEditing(acc);
+                                                setEditForm({ name: acc.name, type: acc.type, max_spending: acc.max_spending || '' });
+                                                setActiveMenuId(null);
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-cyan-600 dark:hover:text-cyan-400 flex items-center gap-3 transition-colors"
+                                        >                                            <Pencil size={12} /> Edit Wallet
+                                        </button>
+                                        <button 
+                                            onClick={() => {
+                                                handleDeleteWallet(acc.id);
+                                                setActiveMenuId(null);
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 flex items-center gap-3 transition-colors"
+                                        >
+                                            <Trash2 size={12} /> Delete Wallet
+                                        </button>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="hidden md:block mt-6 relative z-10">
+                  <p className={`text-2xl font-black tracking-tighter ${selectedAccountId === acc.id ? 'text-white' : 'text-cyan-600 dark:text-cyan-400'}`}>
+                    {formatCurrency(acc.balance)}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              onClick={() => navigate('/add-wallet')}
+              className="w-full md:w-[240px] p-5 md:p-6 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-[2rem] flex md:flex-col items-center justify-center gap-3 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:border-slate-300 dark:hover:border-white/20 transition-all group shrink-0"
+            >
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 group-hover:scale-110 transition-transform">
+                <Plus size={20} className="group-hover:rotate-90 transition-transform duration-500" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest">Add New Wallet</span>
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Deep Analytics Section ... rest of code unchanged ... */}
       {!isFetching && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -289,6 +592,7 @@ const DashboardPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] border border-white/50 dark:border-white/10 p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl relative overflow-hidden mt-6 group hover:border-white dark:hover:border-white/20 transition-all duration-500"
         >
+          {/* ... existing analytics content ... */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-violet-500/5 dark:bg-violet-500/10 blur-[150px] rounded-full pointer-events-none" />
           
           <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12">
@@ -354,7 +658,7 @@ const DashboardPage: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Ledger Feed */}
+      {/* Ledger Feed ... rest of code unchanged ... */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 mt-6">
         {['Income', 'Expense'].map((type, idx) => {
           const txs = type === 'Income' ? incomeTransactions : expenseTransactions;
@@ -435,9 +739,81 @@ const DashboardPage: React.FC = () => {
           );
         })}
       </div>
+      {/* Edit Wallet Modal */}
+      <AnimatePresence>
+        {isEditing && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 backdrop-blur-xl bg-slate-900/40 dark:bg-black/60">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-white dark:bg-[#0a0a0a] w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10"
+                >
+                    <div className="p-8">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-black tracking-tighter uppercase">Edit Wallet</h2>
+                            <button onClick={() => setIsEditing(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <form onSubmit={handleUpdateWallet} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Wallet Name</label>
+                                <input 
+                                    type="text"
+                                    value={editForm.name}
+                                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                                    className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl py-4 px-6 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold"
+                                />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Wallet Type</label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {['Bank', 'EWallet', 'Cash'].map((type) => (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => setEditForm({...editForm, type: type})}
+                                            className={`py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${
+                                                editForm.type === type 
+                                                ? 'border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400' 
+                                                : 'border-slate-100 dark:border-white/5 text-slate-400'
+                                            }`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Max Spending (Optional)</label>
+                                <input 
+                                    type="text"
+                                    value={editForm.max_spending}
+                                    onChange={(e) => setEditForm({...editForm, max_spending: e.target.value.replace(/[^0-9]/g, '')})}
+                                    placeholder="No limit"
+                                    className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl py-4 px-6 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold"
+                                />
+                            </div>
+                            
+                            <button 
+                                type="submit"
+                                disabled={isUpdating}
+                                className="w-full bg-slate-900 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isUpdating ? <Activity className="animate-spin" size={18} /> : "Update Wallet"}
+                            </button>
+                        </form>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
 
 export default DashboardPage;
- DashboardPage;

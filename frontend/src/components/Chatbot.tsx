@@ -44,8 +44,8 @@ const Chatbot: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [provider, setProvider] = useState<'openai' | 'gemini'>('gemini');
-  const messagesEndRef = useRef<HTMLDivLement>(null);
-  const { user } = useAuth(); // Get user from auth context
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user, token } = useAuth(); // Get user and token from auth context
 
   // Load history on mount
   useEffect(() => {
@@ -119,37 +119,42 @@ const Chatbot: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const history = messages.slice(-10).map(m => ({
-        role: m.sender === 'user' ? 'user' : 'assistant',
-        content: m.text
-      }));
+    const history = messages.slice(-10).map(m => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text
+    }));
 
-      const response = await axios.post(`${API_URL}/api/chat/`, {
-        message: userMessage.text,
-        history: history,
-        provider: provider
-      });
+    console.log('Chatbot request token:', token); // Debugging line
 
-      setIsTyping(false);
-      
-      const botResponseText = response.data.response;
+    const response = await axios.post(`${API_URL}/api/chat/`, {
+      message: userMessage.text,
+      history: history,
+      provider: provider
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-      const botMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        sender: 'bot',
-        text: botResponseText,
-        timestamp: Date.now() + 1,
-        isStreaming: true
-      };
-      
-      setMessages(prev => [...prev, botMessage]);
-    } catch (error) {
-      console.error("Chatbot API Error:", error);
-      setIsTyping(false);
-      
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        sender: 'bot',
+    setIsTyping(false);
+
+    const botResponseText = response.data.response;
+
+    const botMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      sender: 'bot',
+      text: botResponseText,
+      timestamp: Date.now() + 1,
+      isStreaming: true
+    };
+
+    setMessages(prev => [...prev, botMessage]);
+    } catch (error: any) { // Add : any to error type for better error handling
+    console.error("Chatbot API Error:", error.response || error.request || error.message); // Enhanced error logging
+    setIsTyping(false);
+
+    const errorMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),        sender: 'bot',
         text: "Sorry, I'm having trouble connecting to my brain right now. Please try again later.",
         timestamp: Date.now() + 1,
         isStreaming: false

@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, 
@@ -9,7 +10,8 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Activity,
-  Wallet
+  Wallet,
+  Crown
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -17,7 +19,39 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+
+  const handleUpgrade = async () => {
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/api/payment/create`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const { token: snapToken } = response.data;
+
+      // @ts-ignore
+      window.snap.pay(snapToken, {
+        onSuccess: (result: any) => {
+          console.log('success', result);
+          alert('Payment success! You are now a VIP.');
+          window.location.reload();
+        },
+        onPending: (result: any) => {
+          console.log('pending', result);
+          alert('Waiting for your payment!');
+        },
+        onError: (result: any) => {
+          console.log('error', result);
+          alert('Payment failed!');
+        },
+        onClose: () => {
+          console.log('customer closed the popup without finishing the payment');
+        }
+      });
+    } catch (err) {
+      console.error('Failed to initiate payment', err);
+      alert('Failed to initiate payment. Please try again.');
+    }
+  };
 
   const menuItems = [
     { 
@@ -111,6 +145,30 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             )}
           </NavLink>
         ))}
+
+        {/* Upgrade VIP Menu for Free Users */}
+        {user?.role === 'Free' && (
+          <button
+            onClick={handleUpgrade}
+            className={`flex items-center w-full h-12 px-3 mt-4 rounded-xl text-sm font-black transition-all duration-300 relative group bg-gradient-to-r from-cyan-500/20 to-violet-600/20 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(34,211,238,0.1)] hover:shadow-[0_0_25px_rgba(34,211,238,0.2)] ${!isOpen && 'md:justify-center'}`}
+          >
+            <div className="shrink-0 transition-transform duration-300 group-hover:rotate-12">
+              <Crown size={20} className="fill-current" />
+            </div>
+            
+            <div className={`ml-3 transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0 pointer-events-none'}`}>
+              <span className="whitespace-nowrap uppercase tracking-widest text-[10px]">Upgrade VIP</span>
+            </div>
+
+            {/* Tooltip for collapsed state */}
+            {!isOpen && (
+              <div className="absolute left-full ml-4 px-3 py-2 bg-gradient-to-r from-cyan-600 to-violet-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 hidden md:block shadow-xl border border-white/10">
+                Upgrade VIP
+                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-cyan-600 rotate-45" />
+              </div>
+            )}
+          </button>
+        )}
       </nav>
       
       {/* Sidebar Footer Indicator */}

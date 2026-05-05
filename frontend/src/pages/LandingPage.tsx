@@ -6,7 +6,8 @@ import {
   Zap, 
   Sparkles,
   Activity,
-  Globe
+  Globe,
+  Crown
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
@@ -68,6 +69,48 @@ const LandingPage: React.FC = () => {
               Get Started <ArrowUpRight size={22} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </Link>
           </div>
+        </div>
+
+        {/* Pricing Section */}
+        <div className="relative z-20 mt-24 max-w-5xl mx-auto w-full px-4">
+           <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-4">Choose Your Plan</h2>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Elevate your financial experience with our premium features.</p>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Free Tier */}
+              <div className="bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-10 flex flex-col items-center text-center hover:border-slate-700 transition-all duration-500 group">
+                 <div className="bg-slate-100 dark:bg-white/5 p-4 rounded-2xl mb-6 text-slate-400 group-hover:text-white transition-colors">
+                    <Zap size={32} />
+                 </div>
+                 <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">FREE</h3>
+                 <div className="text-4xl font-black mb-6">RP 0<span className="text-sm text-slate-500"> / forever</span></div>
+                 <ul className="space-y-4 mb-10 text-slate-400 text-sm font-medium">
+                    <li className="flex items-center gap-2 justify-center"><ShieldCheck size={16} className="text-cyan-500" /> Basic Transaction Tracking</li>
+                    <li className="flex items-center gap-2 justify-center"><ShieldCheck size={16} className="text-cyan-500" /> Up to 3 Wallets</li>
+                    <li className="flex items-center gap-2 justify-center"><ShieldCheck size={16} className="text-cyan-500" /> Basic Analytics</li>
+                 </ul>
+                 <Link to="/login" className="mt-auto w-full py-4 border border-white/20 rounded-full font-black uppercase text-xs tracking-widest hover:bg-white/5 transition-colors">Start for Free</Link>
+              </div>
+
+              {/* VIP Tier */}
+              <div className="bg-gradient-to-br from-cyan-600/20 to-violet-600/20 backdrop-blur-xl border border-cyan-500/30 rounded-[2.5rem] p-10 flex flex-col items-center text-center relative overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.15)] group">
+                 <div className="absolute top-0 right-0 bg-cyan-500 text-black px-4 py-1.5 rounded-bl-2xl text-[10px] font-black uppercase tracking-widest">Most Popular</div>
+                 <div className="bg-cyan-500/20 p-4 rounded-2xl mb-6 text-cyan-400">
+                    <Crown size={32} className="fill-current" />
+                 </div>
+                 <h3 className="text-2xl font-black mb-2 uppercase tracking-tight text-white">VIP</h3>
+                 <div className="text-4xl font-black mb-6 text-white">RP 10.000<span className="text-sm text-white/50"> / one-time</span></div>
+                 <ul className="space-y-4 mb-10 text-white/70 text-sm font-medium">
+                    <li className="flex items-center gap-2 justify-center"><Sparkles size={16} className="text-cyan-400" /> Unlimited Wallets</li>
+                    <li className="flex items-center gap-2 justify-center"><Sparkles size={16} className="text-cyan-400" /> Advanced AI Insights</li>
+                    <li className="flex items-center gap-2 justify-center"><Sparkles size={16} className="text-cyan-400" /> VIP Badge & Priority Access</li>
+                    <li className="flex items-center gap-2 justify-center"><Sparkles size={16} className="text-cyan-400" /> Custom Category Icons</li>
+                 </ul>
+                 <Link to="/login" className="mt-auto w-full py-4 bg-white text-black rounded-full font-black uppercase text-xs tracking-widest hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,255,255,0.4)]">Upgrade Now</Link>
+              </div>
+           </div>
         </div>
 
         {/* Abstract 3D Dashboard Mockup Elements */}

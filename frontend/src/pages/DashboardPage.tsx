@@ -130,6 +130,39 @@ const DashboardPage: React.FC = () => {
       setIsUpdating(false);
     }
   };
+
+  const handleUpgrade = async () => {
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/api/payment/create`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const { token: snapToken } = response.data;
+
+      // @ts-ignore
+      window.snap.pay(snapToken, {
+        onSuccess: (result: any) => {
+          console.log('success', result);
+          alert('Payment success! You are now a VIP.');
+          window.location.reload();
+        },
+        onPending: (result: any) => {
+          console.log('pending', result);
+          alert('Waiting for your payment!');
+        },
+        onError: (result: any) => {
+          console.log('error', result);
+          alert('Payment failed!');
+        },
+        onClose: () => {
+          console.log('customer closed the popup without finishing the payment');
+        }
+      });
+    } catch (err) {
+      console.error('Failed to initiate payment', err);
+      alert('Failed to initiate payment. Please try again.');
+    }
+  };
+
   const healthData = useMemo(() => {
     if (!dashboardData) return null;
   
@@ -335,6 +368,31 @@ const DashboardPage: React.FC = () => {
         <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 p-4 rounded-2xl flex items-center gap-4 text-sm font-medium shadow-sm backdrop-blur-md">
           <ShieldCheck size={20} />
           {error}
+        </motion.div>
+      )}
+
+      {user?.role === 'Free' && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative group overflow-hidden bg-gradient-to-r from-cyan-600/20 to-violet-600/20 border border-cyan-500/30 p-8 rounded-[2.5rem] md:rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-8 backdrop-blur-2xl shadow-2xl"
+        >
+          <div className="absolute -right-20 -top-20 w-64 h-64 bg-cyan-500/10 blur-[100px] pointer-events-none group-hover:bg-cyan-500/20 transition-all duration-700"></div>
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="bg-gradient-to-br from-cyan-500 to-violet-600 text-white p-4 rounded-[1.5rem] shadow-lg shadow-cyan-500/20">
+              <Crown size={32} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Upgrade to VIP Status</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-md">Unlock unlimited wallets, advanced AI financial insights, and exclusive VIP features for just <span className="text-cyan-600 dark:text-cyan-400 font-black">RP 10.000</span>.</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleUpgrade}
+            className="w-full md:w-auto bg-slate-900 dark:bg-white text-white dark:text-black px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl dark:shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+          >
+            Upgrade Now
+          </button>
         </motion.div>
       )}
 

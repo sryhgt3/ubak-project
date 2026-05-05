@@ -145,3 +145,25 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     session_id: Optional[int] = None
+
+class PaymentResponse(BaseModel):
+    token: str
+    redirect_url: str
+    order_id: str
+
+class PaymentStatusRequest(BaseModel):
+    order_id: str
+
+class MidtransWebhook(BaseModel):
+    transaction_time: str
+    transaction_status: str
+    transaction_id: str
+    status_message: str
+    status_code: str
+    signature_key: str
+    payment_type: str
+    order_id: str
+    merchant_id: str
+    gross_amount: str
+    fraud_status: Optional[str] = None
+    currency: Optional[str] = "IDR"

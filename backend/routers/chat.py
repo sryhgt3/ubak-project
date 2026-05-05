@@ -9,11 +9,8 @@ from models import User
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
-def get_chat_repository(db: Session = Depends(get_db)):
-    return ChatRepository(db)
-
-def get_chat_service(chat_repo: ChatRepository = Depends(get_chat_repository)):
-    return ChatService(chat_repo)
+def get_chat_service(db: Session = Depends(get_db)):
+    return ChatService(db)
 
 @router.post("/", response_model=ChatResponse)
 async def chat_with_ai(

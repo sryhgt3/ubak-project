@@ -26,7 +26,10 @@ class ChatService:
             genai.configure(api_key=self.gemini_key)
 
     def _build_system_prompt(self, user: User) -> str:
-        return f"{SYSTEM_PROMPT}\nData User: Nama:{user.username}, Goal:{user.savings_goal or '-'}, Dream:{user.dream_item or '-'}, Limit:{user.max_spending or '-'}."
+        total_income = sum(t.amount for t in user.transactions if t.type == TransactionType.Income)
+        total_expenses = sum(t.amount for t in user.transactions if t.type == TransactionType.Expense)
+        saldo = (user.monthly_income or 0) + total_income - total_expenses
+        return f"{SYSTEM_PROMPT}\nData User: Nama:{user.username}, Goal:{user.savings_goal or '-'}, Dream:{user.dream_item or '-'}, Limit:{user.max_spending or '-'}, Saldo:{saldo}."
 
     def get_chat_response(self, request: ChatRequest, user: User):
         provider = request.provider.lower() if request.provider else "openai"

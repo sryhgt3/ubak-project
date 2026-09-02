@@ -38,6 +38,9 @@ class UserService:
                 raise HTTPException(status_code=400, detail="Email already taken")
             user.email = update_data.email
 
+        if update_data.password:
+            user.hashed_password = get_password_hash(update_data.password)
+
         if update_data.monthly_income is not None:
             user.monthly_income = update_data.monthly_income
         if update_data.savings_goal is not None:

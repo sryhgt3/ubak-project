@@ -6,19 +6,19 @@
 
 # Menjalankan environment development di background
 dev:
-	docker-compose -f docker-compose.yml up -d
+	docker compose -f docker-compose.yml up -d
 
 # Build ulang dan jalankan environment development
 dev-build:
-	docker-compose -f docker-compose.yml up -d --build
+	docker compose -f docker-compose.yml up -d --build
 
 # Mematikan environment development
 dev-down:
-	docker-compose -f docker-compose.yml down
+	docker compose -f docker-compose.yml down
 
 # Melihat log environment development
 logs:
-	docker-compose -f docker-compose.yml logs -f
+	docker compose -f docker-compose.yml logs -f
 
 
 # ==========================================
@@ -27,19 +27,19 @@ logs:
 
 # Menjalankan environment production di background
 prod:
-	docker-compose -f docker-compose-prod.yml up -d
+	docker compose -f docker-compose-prod.yml up -d
 
 # Build ulang dan jalankan environment production
 prod-build:
-	docker-compose -f docker-compose-prod.yml up -d --build
+	docker compose -f docker-compose-prod.yml up -d --build
 
 # Mematikan environment production
 prod-down:
-	docker-compose -f docker-compose-prod.yml down
+	docker compose -f docker-compose-prod.yml down
 
 # Melihat log environment production
 prod-logs:
-	docker-compose -f docker-compose-prod.yml logs -f
+	docker compose -f docker-compose-prod.yml logs -f
 
 
 # ==========================================

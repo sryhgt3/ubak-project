@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Zap,
-  Activity
+  Activity,
+  Lock
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -21,6 +22,7 @@ const ProfilePage: React.FC = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [formData, setFormData] = useState({
     username: user?.username || '',
+    password: '',
     monthly_income: user?.monthly_income && user.monthly_income !== 0 ? user.monthly_income.toString() : '',
     savings_goal: user?.savings_goal || '',
     dream_item: user?.dream_item || '',
@@ -28,25 +30,45 @@ const ProfilePage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Component mounted
-  }, []);
+    if (user) {
+      // eslint-disable-next-line
+      setFormData(prev => ({
+        ...prev,
+        username: user.username || '',
+        monthly_income: user.monthly_income ? user.monthly_income.toString() : '',
+        savings_goal: user.savings_goal || '',
+        dream_item: user.dream_item || '',
+        max_spending: user.max_spending ? user.max_spending.toString() : ''
+      }));
+    }
+  }, [user]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     setMessage({ type: '', text: '' });
     
-    const submissionData = {
+    // Copy formData and remove password if it's empty so we don't overwrite with empty string
+    const submissionData: any = {
       ...formData,
       monthly_income: parseInt(formData.monthly_income) || 0,
       max_spending: parseInt(formData.max_spending) || 0
     };
+    
+    if (!submissionData.password) {
+      delete submissionData.password;
+    }
 
     try {
       await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/me`, submissionData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      updateUser(submissionData);
+      // We don't want to save password to the local user context
+      const newUserData = { ...submissionData };
+      delete newUserData.password;
+      
+      updateUser(newUserData);
+      setFormData(prev => ({ ...prev, password: '' })); // clear password field
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error: any) {
       setMessage({ type: 'error', text: error.response?.data?.detail || 'Update failed' });
@@ -97,18 +119,36 @@ const ProfilePage: React.FC = () => {
             Base Information
           </div>
           
-          <div className="space-y-3 relative z-10">
-            <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Username</label>
-            <div className="relative group/input">
-               <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-violet-500 transition-colors">
-                 <Zap className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" fill="currentColor" />
-               </span>
-               <input 
-                type="text" 
-                value={formData.username}
-                onChange={e => setFormData({...formData, username: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-4 focus:ring-1 focus:ring-violet-500/50 outline-none transition-all font-bold text-xs uppercase tracking-widest text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 shadow-sm"
-              />
+          <div className="space-y-5 relative z-10">
+            <div className="space-y-3">
+              <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Username</label>
+              <div className="relative group/input">
+                 <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-violet-500 transition-colors">
+                   <Zap className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" fill="currentColor" />
+                 </span>
+                 <input 
+                  type="text" 
+                  value={formData.username}
+                  onChange={e => setFormData({...formData, username: e.target.value})}
+                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-4 focus:ring-1 focus:ring-violet-500/50 outline-none transition-all font-bold text-xs uppercase tracking-widest text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">New Password (Leave blank to keep)</label>
+              <div className="relative group/input">
+                 <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-violet-500 transition-colors">
+                   <Lock className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" fill="currentColor" />
+                 </span>
+                 <input 
+                  type="password" 
+                  value={formData.password}
+                  onChange={e => setFormData({...formData, password: e.target.value})}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-4 focus:ring-1 focus:ring-violet-500/50 outline-none transition-all font-bold text-xs uppercase tracking-widest text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 shadow-sm"
+                />
+              </div>
             </div>
           </div>
 

@@ -1,6 +1,8 @@
 import sys
+import os
+sys.path.append(os.path.abspath('/home/vory/Kerjaan/ubak-project/backend'))
 from schemas import ChatRequest, ChatMessage
-from models import User
+from models import User, Transaction, TransactionType
 from services.chat_service import ChatService
 import logging
 
@@ -12,31 +14,23 @@ class MockDB:
     def commit(self):
         print("MockDB commit")
 
-# Mock User
-user = User(id=1, username="vip_user", savings_goal="Beli Rumah", dream_item="Mobil Baru", max_spending=5000000)
+# Mock User and Transactions
+t1 = Transaction(amount=1000000, type=TransactionType.Income, category="Salary", description="Gaji")
+t2 = Transaction(amount=300000, type=TransactionType.Expense, category="Food", description="Makan")
+
+user = User(id=1, username="vip_user", monthly_income=500000, savings_goal="Beli Rumah", dream_item="Mobil Baru", max_spending=5000000)
+user.transactions = [t1, t2] 
+# Saldo should be: 500,000 + 1,000,000 - 300,000 = 1,200,000
 
 chat_service = ChatService(MockDB())
 
-# 1. Ask to record a transaction with incomplete data
-request1 = ChatRequest(
-    message="catat pengeluaran hari ini 50000",
+# Ask about balance
+request = ChatRequest(
+    message="berapakah sisa saldo saya sekarang?",
     provider="gemini",
     history=[]
 )
-print("--- USER: catat pengeluaran hari ini 50000")
-res1 = chat_service.get_chat_response(request1, user)
-print("--- AI:", res1.response)
+print("--- USER: berapakah sisa saldo saya sekarang?")
+res = chat_service.get_chat_response(request, user)
+print("--- AI:", res.response)
 
-# 2. Provide missing data
-history = [
-    ChatMessage(role="user", content="catat pengeluaran hari ini 50000"),
-    ChatMessage(role="model", content=res1.response)
-]
-request2 = ChatRequest(
-    message="buat beli makan siang (Food)",
-    provider="gemini",
-    history=history
-)
-print("\n--- USER: buat beli makan siang (Food)")
-res2 = chat_service.get_chat_response(request2, user)
-print("--- AI:", res2.response)

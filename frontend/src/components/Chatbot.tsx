@@ -47,9 +47,13 @@ const Chatbot: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user, token } = useAuth(); // Get user and token from auth context
 
-  // Load history on mount
+  // Load history on mount or when user changes
   useEffect(() => {
-    const saved = localStorage.getItem('chatbot_history');
+    if (!user) {
+      setMessages([]);
+      return;
+    }
+    const saved = localStorage.getItem(`chatbot_history_${user.username}`);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -70,15 +74,16 @@ const Chatbot: React.FC = () => {
     
     // Default to gemini while OpenAI is offline
     setProvider('gemini');
-  }, []);
+  }, [user?.username]);
 
   useEffect(() => {
+    if (!user) return;
     const hasStreaming = messages.some(m => m.isStreaming);
     if (!hasStreaming && messages.length > 0) {
-      localStorage.setItem('chatbot_history', JSON.stringify(messages));
+      localStorage.setItem(`chatbot_history_${user.username}`, JSON.stringify(messages));
     }
     scrollToBottom();
-  }, [messages]);
+  }, [messages, user?.username]);
   
   useEffect(() => {
     localStorage.setItem('chatbot_provider', provider);

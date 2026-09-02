@@ -13,6 +13,7 @@ class Token(BaseModel):
 class ProfileUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
+    password: Optional[str] = None
     monthly_income: Optional[int] = None
     savings_goal: Optional[str] = None
     dream_item: Optional[str] = None

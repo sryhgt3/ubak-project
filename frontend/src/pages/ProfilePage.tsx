@@ -20,6 +20,14 @@ const ProfilePage: React.FC = () => {
   const { user, token, updateUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  
+  const formatToDot = (val: string | number) => {
+    if (val == null) return '';
+    const numericStr = String(val).replace(/\D/g, '');
+    if (!numericStr) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(numericStr));
+  };
+
   const [formData, setFormData] = useState({
     username: user?.username || '',
     password: '',
@@ -51,8 +59,8 @@ const ProfilePage: React.FC = () => {
     // Copy formData and remove password if it's empty so we don't overwrite with empty string
     const submissionData: any = {
       ...formData,
-      monthly_income: parseInt(formData.monthly_income) || 0,
-      max_spending: parseInt(formData.max_spending) || 0
+      monthly_income: Number(formData.monthly_income.replace(/\D/g, '')) || 0,
+      max_spending: Number(formData.max_spending.replace(/\D/g, '')) || 0
     };
     
     if (!submissionData.password) {
@@ -181,7 +189,7 @@ const ProfilePage: React.FC = () => {
                   type="text"
                   inputMode="numeric"
                   value={formData.monthly_income}
-                  onChange={e => setFormData({...formData, monthly_income: e.target.value.replace(/[^0-9]/g, '')})}
+                  onChange={e => setFormData({...formData, monthly_income: formatToDot(e.target.value)})}
                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
@@ -218,7 +226,7 @@ const ProfilePage: React.FC = () => {
                   type="text"
                   inputMode="numeric"
                   value={formData.max_spending}
-                  onChange={e => setFormData({...formData, max_spending: e.target.value.replace(/[^0-9]/g, '')})}
+                  onChange={e => setFormData({...formData, max_spending: formatToDot(e.target.value)})}
                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white shadow-sm"
                 />
               </div>

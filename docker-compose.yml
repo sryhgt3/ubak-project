@@ -3,6 +3,7 @@ services:
     image: postgres:15-alpine
     container_name: ubak_db_dev
     restart: always
+    env_file: ./backend/.env
     environment:
       POSTGRES_USER: postubak
       POSTGRES_PASSWORD: postubak123
@@ -16,6 +17,7 @@ services:
     image: dpage/pgadmin4
     container_name: ubak_pgadmin_dev
     restart: always
+    env_file: ./backend/.env
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@ubak.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -28,6 +30,7 @@ services:
     build: ./backend
     container_name: ubak_backend_dev
     restart: always
+    env_file: ./backend/.env
     environment:
       DATABASE_URL: postgresql://postubak:postubak123@db:5432/ubak_db
       SECRET_KEY: a_very_secret_key_change_me_in_production

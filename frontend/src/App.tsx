@@ -10,8 +10,8 @@ import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import AddTransactionPage from './pages/AddTransactionPage';
 import AddAccountPage from './pages/AddAccountPage';
-import InflowPage from './pages/InflowPage';
-import OutflowPage from './pages/OutflowPage';
+import IncomePage from './pages/IncomePage';
+import ExpensePage from './pages/ExpensePage';
 
 import Layout from './components/Layout';
 import Preloader from './components/Preloader';
@@ -39,8 +39,8 @@ const App: React.FC = () => {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/add-transaction" element={<AddTransactionPage />} />
             <Route path="/add-account" element={<AddAccountPage />} />
-            <Route path="/inflow" element={<InflowPage />} />
-            <Route path="/outflow" element={<OutflowPage />} />
+            <Route path="/income" element={<IncomePage />} />
+            <Route path="/expense" element={<ExpensePage />} />
           </Route>
 
           {/* Fallback */}

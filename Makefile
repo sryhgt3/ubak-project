@@ -1,53 +1,52 @@
-.PHONY: dev dev-build dev-down prod prod-build prod-down logs prod-logs clean
+.PHONY: dev-up dev-down dev-build prod-up prod-down prod-build backend-rebuild-dev backend-rebuild-prod logs-dev logs-prod
 
 # ==========================================
-# Development Commands
+# DEVELOPMENT ENVIRONMENT (docker-compose.yml)
 # ==========================================
 
-# Menjalankan environment development di background
-dev:
+# Membangun ulang (build) semua container DEV
+dev-build:
+	docker compose -f docker-compose.yml build
+
+# Menyalakan semua container DEV di background
+dev-up:
 	docker compose -f docker-compose.yml up -d
 
-# Build ulang dan jalankan environment development
-dev-build:
-	docker compose -f docker-compose.yml up -d --build
-
-# Mematikan environment development
+# Mematikan semua container DEV
 dev-down:
 	docker compose -f docker-compose.yml down
 
-# Melihat log environment development
-logs:
+# Membangun ulang dan me-restart HANYA backend DEV
+backend-rebuild-dev:
+	docker compose -f docker-compose.yml build backend
+	docker compose -f docker-compose.yml up -d backend
+
+# Melihat log DEV secara real-time
+logs-dev:
 	docker compose -f docker-compose.yml logs -f
 
 
 # ==========================================
-# Production Commands
+# PRODUCTION ENVIRONMENT (docker-compose-prod.yml)
 # ==========================================
 
-# Menjalankan environment production di background
-prod:
+# Membangun ulang (build) semua container PROD
+prod-build:
+	docker compose -f docker-compose-prod.yml build
+
+# Menyalakan semua container PROD di background
+prod-up:
 	docker compose -f docker-compose-prod.yml up -d
 
-# Build ulang dan jalankan environment production
-prod-build:
-	docker compose -f docker-compose-prod.yml up -d --build
-
-# Mematikan environment production
+# Mematikan semua container PROD
 prod-down:
 	docker compose -f docker-compose-prod.yml down
 
-# Melihat log environment production
-prod-logs:
+# Membangun ulang dan me-restart HANYA backend PROD
+backend-rebuild-prod:
+	docker compose -f docker-compose-prod.yml build backend
+	docker compose -f docker-compose-prod.yml up -d backend
+
+# Melihat log PROD secara real-time
+logs-prod:
 	docker compose -f docker-compose-prod.yml logs -f
-
-
-# ==========================================
-# Utility Commands
-# ==========================================
-
-# Membersihkan file cache dan redundant (kecuali DB)
-clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type f -name "*.pyc" -delete
-	@echo "Cleaned up python cache files."

@@ -18,3 +18,15 @@ class TransactionRepository:
         self.db.commit()
         self.db.refresh(transaction)
         return transaction
+
+    def get_by_id_and_user_id(self, transaction_id: int, user_id: int):
+        return self.db.query(Transaction).filter(Transaction.id == transaction_id, Transaction.user_id == user_id).first()
+
+    def update(self, transaction: Transaction):
+        self.db.commit()
+        self.db.refresh(transaction)
+        return transaction
+
+    def delete(self, transaction: Transaction):
+        self.db.delete(transaction)
+        self.db.commit()

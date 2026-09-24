@@ -1,9 +1,11 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from openai import OpenAI
 import os
 import json
 import google.generativeai as genai
 import logging
+from datetime import datetime
 from prompts.chatbotprompt import SYSTEM_PROMPT
 from fastapi import HTTPException
 from schemas import ChatRequest, ChatResponse
@@ -29,7 +31,21 @@ class ChatService:
         total_income = sum(t.amount for t in user.transactions if t.type == TransactionType.Income)
         total_expenses = sum(t.amount for t in user.transactions if t.type == TransactionType.Expense)
         saldo = (user.monthly_income or 0) + total_income - total_expenses
-        return f"{SYSTEM_PROMPT}\nData User: Nama:{user.username}, Goal:{user.savings_goal or '-'}, Dream:{user.dream_item or '-'}, Limit:{user.max_spending or '-'}, Saldo:{saldo}."
+        today_str = datetime.utcnow().strftime("%Y-%m-%d")
+        return (f"{SYSTEM_PROMPT}\n"
+                f"Data Keuangan User saat ini:\n"
+                f"- Nama: {user.username}\n"
+                f"- Goal: {user.savings_goal or '-'}\n"
+                f"- Dream: {user.dream_item or '-'}\n"
+                f"- Max Limit: {user.max_spending or '-'}\n"
+                f"- Sisa Saldo: {saldo}\n"
+                f"Tanggal hari ini: {today_str}\n"
+                "Instruksi Khusus CRUD (SANGAT PENTING):\n"
+                "1. MENCATAT: Gunakan `date` YYYY-MM-DD jika user menyebut tanggal. Jika tidak, kosongkan.\n"
+                "2. MENGHAPUS/MENGEDIT: JANGAN PERNAH langsung menghapus/edit jika perintahnya kurang spesifik.\n"
+                "   - Panggil `search_transactions` terlebih dahulu dengan parameter pencarian yang sesuai (misal keyword 'makan' atau date '2026-09-23').\n"
+                "   - Jika ada >1 hasil yang cocok, sebutkan daftarnya dan MINTA KONFIRMASI user ID mana yang dihapus/edit.\n"
+                "   - Jika hanya 1 hasil atau user sudah konfirmasi ID, jalankan `delete_transaction`/`update_transaction`.\n")
 
     def get_chat_response(self, request: ChatRequest, user: User):
         provider = request.provider.lower() if request.provider else "openai"
@@ -42,62 +58,168 @@ class ChatService:
         try:
             messages = [{"role": "system", "content": self._build_system_prompt(user)}]
             if request.history:
-                for msg in request.history:
+                for msg in request.history[-6:]:  # OPTIMIZATION: Only keep last 6 messages in history to save tokens
                     messages.append({"role": msg.role, "content": msg.content})
             messages.append({"role": "user", "content": request.message})
             
-            tools = [{
-                "type": "function",
-                "function": {
-                    "name": "record_transaction",
-                    "description": "Catat transaksi pengguna",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "amount": {"type": "number"},
-                            "type": {"type": "string", "enum": ["Income", "Expense"]},
-                            "category": {"type": "string"},
-                            "description": {"type": "string"}
-                        },
-                        "required": ["amount", "type", "category", "description"]
+            tools = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "record_transaction",
+                        "description": "Catat transaksi baru",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "amount": {"type": "number"},
+                                "type": {"type": "string", "enum": ["Income", "Expense"]},
+                                "category": {"type": "string"},
+                                "description": {"type": "string"},
+                                "date": {"type": "string", "description": "Format YYYY-MM-DD"}
+                            },
+                            "required": ["amount", "type", "category", "description"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "search_transactions",
+                        "description": "Cari data transaksi berdasarkan kata kunci atau tanggal (sangat menghemat token).",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "keyword": {"type": "string", "description": "Kata kunci pencarian di deskripsi/kategori (opsional)"},
+                                "date": {"type": "string", "description": "Tanggal format YYYY-MM-DD (opsional)"}
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "update_transaction",
+                        "description": "Update data transaksi (HANYA panggil jika ID sudah pasti)",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "integer"},
+                                "amount": {"type": "number"},
+                                "type": {"type": "string", "enum": ["Income", "Expense"]},
+                                "category": {"type": "string"},
+                                "description": {"type": "string"},
+                                "date": {"type": "string"}
+                            },
+                            "required": ["id"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "delete_transaction",
+                        "description": "Hapus transaksi (HANYA panggil jika ID sudah pasti)",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "integer"}
+                            },
+                            "required": ["id"]
+                        }
                     }
                 }
-            }]
+            ]
 
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=messages,
                 tools=tools,
-                max_tokens=256
+                max_tokens=300
             )
             message = response.choices[0].message
             
             if message.tool_calls:
                 messages.append(message)
+                
+                needs_second_ai_call = False
+                hardcoded_response_msg = "✅ Perintah dieksekusi dengan sukses oleh sistem."
+
                 for tool_call in message.tool_calls:
+                    args = json.loads(tool_call.function.arguments)
+                    result = {}
+                    
                     if tool_call.function.name == "record_transaction":
-                        args = json.loads(tool_call.function.arguments)
-                        t = Transaction(
-                            user_id=user.id,
-                            amount=args["amount"],
-                            type=TransactionType(args["type"]),
-                            category=args["category"],
-                            description=args["description"]
-                        )
+                        d_obj = datetime.utcnow()
+                        if "date" in args and args["date"]:
+                            try:
+                                d_obj = datetime.strptime(args["date"], "%Y-%m-%d")
+                            except ValueError:
+                                pass
+                        t = Transaction(user_id=user.id, amount=args["amount"], type=TransactionType(args["type"]), category=args["category"], description=args["description"], date=d_obj)
                         self.db.add(t)
                         self.db.commit()
-                        messages.append({
-                            "role": "tool",
-                            "tool_call_id": tool_call.id,
-                            "content": json.dumps({"status": "success"})
-                        })
+                        result = {"status": "success"}
+                        hardcoded_response_msg = f"✅ Transaksi berhasil dicatat:\n**Rp {args['amount']:,.0f}** - {args.get('description', '')}"
+                    
+                    elif tool_call.function.name == "search_transactions":
+                        # OPTIMIZATION: Push filtering to DB level
+                        query = self.db.query(Transaction).filter(Transaction.user_id == user.id)
+                        if "date" in args and args["date"]:
+                            query = query.filter(Transaction.date >= datetime.strptime(args["date"], "%Y-%m-%d"))
+                        if "keyword" in args and args["keyword"]:
+                            kw = f"%{args['keyword']}%"
+                            query = query.filter(or_(Transaction.description.ilike(kw), Transaction.category.ilike(kw)))
+                        
+                        txs = query.order_by(Transaction.date.desc()).limit(5).all() # Max 5 results to save tokens
+                        result = [{"id": t.id, "amount": t.amount, "type": t.type.value, "desc": t.description, "date": str(t.date).split(' ')[0]} for t in txs]
+                        needs_second_ai_call = True # AI must read results to answer user
+                    
+                    elif tool_call.function.name == "update_transaction":
+                        t = self.db.query(Transaction).filter(Transaction.id == args["id"], Transaction.user_id == user.id).first()
+                        if t:
+                            if "amount" in args: t.amount = args["amount"]
+                            if "type" in args: t.type = TransactionType(args["type"])
+                            if "category" in args: t.category = args["category"]
+                            if "description" in args: t.description = args["description"]
+                            if "date" in args and args["date"]:
+                                try:
+                                    t.date = datetime.strptime(args["date"], "%Y-%m-%d")
+                                except ValueError:
+                                    pass
+                            self.db.commit()
+                            result = {"status": "success"}
+                            hardcoded_response_msg = "✅ Data transaksi berhasil diperbarui."
+                        else:
+                            result = {"status": "error", "message": "ID not found"}
+                            needs_second_ai_call = True
+
+                    elif tool_call.function.name == "delete_transaction":
+                        t = self.db.query(Transaction).filter(Transaction.id == args["id"], Transaction.user_id == user.id).first()
+                        if t:
+                            self.db.delete(t)
+                            self.db.commit()
+                            result = {"status": "success"}
+                            hardcoded_response_msg = "✅ Transaksi berhasil dihapus secara permanen."
+                        else:
+                            result = {"status": "error", "message": "ID not found"}
+                            needs_second_ai_call = True
+
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result)
+                    })
                 
-                response = self.openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=messages,
-                    max_tokens=256
-                )
-                message = response.choices[0].message
+                # OPTIMIZATION: Skip 2nd API call if doing CRUD, return hardcoded message!
+                if needs_second_ai_call:
+                    response = self.openai_client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=messages,
+                        max_tokens=300
+                    )
+                    return ChatResponse(response=response.choices[0].message.content)
+                else:
+                    return ChatResponse(response=hardcoded_response_msg)
 
             return ChatResponse(response=message.content)
         except Exception as e:
@@ -106,30 +228,66 @@ class ChatService:
 
     def _get_gemini_response(self, request: ChatRequest, user: User):
         try:
-            def record_transaction(amount: float, type: str, category: str, description: str):
-                """Catat transaksi (pengeluaran/pemasukan)"""
-                t = Transaction(
-                    user_id=user.id,
-                    amount=amount,
-                    type=TransactionType(type),
-                    category=category,
-                    description=description
-                )
+            def record_transaction(amount: float, type: str, category: str, description: str, date: str = None):
+                """Catat transaksi baru"""
+                d_obj = datetime.utcnow()
+                if date:
+                    try:
+                        d_obj = datetime.strptime(date, "%Y-%m-%d")
+                    except ValueError:
+                        pass
+                t = Transaction(user_id=user.id, amount=amount, type=TransactionType(type), category=category, description=description, date=d_obj)
                 self.db.add(t)
                 self.db.commit()
-                return {"status": "success", "message": "Berhasil"}
+                return {"status": "success"}
+            
+            def search_transactions(keyword: str = None, date: str = None):
+                """Cari transaksi berdasarkan kata kunci atau tanggal."""
+                query = self.db.query(Transaction).filter(Transaction.user_id == user.id)
+                if date:
+                    query = query.filter(Transaction.date >= datetime.strptime(date, "%Y-%m-%d"))
+                if keyword:
+                    kw = f"%{keyword}%"
+                    query = query.filter(or_(Transaction.description.ilike(kw), Transaction.category.ilike(kw)))
+                txs = query.order_by(Transaction.date.desc()).limit(5).all()
+                return [{"id": t.id, "amount": t.amount, "type": t.type.value, "desc": t.description, "date": str(t.date).split(' ')[0]} for t in txs]
+
+            def update_transaction(id: int, amount: float = None, type: str = None, category: str = None, description: str = None, date: str = None):
+                """Update transaksi. Pastikan ID valid."""
+                t = self.db.query(Transaction).filter(Transaction.id == id, Transaction.user_id == user.id).first()
+                if not t: return {"status": "error", "message": "Not found"}
+                if amount is not None: t.amount = amount
+                if type: t.type = TransactionType(type)
+                if category: t.category = category
+                if description: t.description = description
+                if date:
+                    try:
+                        t.date = datetime.strptime(date, "%Y-%m-%d")
+                    except ValueError:
+                        pass
+                self.db.commit()
+                return {"status": "success"}
+
+            def delete_transaction(id: int):
+                """Hapus transaksi berdasarkan ID"""
+                t = self.db.query(Transaction).filter(Transaction.id == id, Transaction.user_id == user.id).first()
+                if not t: return {"status": "error", "message": "Not found"}
+                self.db.delete(t)
+                self.db.commit()
+                return {"status": "success"}
 
             model = genai.GenerativeModel(
                 model_name="gemini-2.5-flash",
                 generation_config=generation_config,
                 system_instruction=self._build_system_prompt(user),
-                tools=[record_transaction]
+                tools=[record_transaction, search_transactions, update_transaction, delete_transaction]
             )
 
             history = []
-            if request.history:
-                for msg in request.history:
-                    history.append({"role": "user" if msg.role == "user" else "model", "parts": [msg.content]})
+            # OPTIMIZATION: Only keep last 6 messages
+            safe_history = request.history[-6:] if request.history else []
+            for msg in safe_history:
+                history.append({"role": "user" if msg.role == "user" else "model", "parts": [msg.content]})
             
             chat = model.start_chat(history=history, enable_automatic_function_calling=True)
             response = chat.send_message(request.message)

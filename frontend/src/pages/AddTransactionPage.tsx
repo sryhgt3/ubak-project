@@ -21,12 +21,28 @@ const AddTransactionPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   
+
+  const formatToDot = (val: string) => {
+    const numericStr = val.replace(/\D/g, '');
+    if (!numericStr) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(numericStr));
+  };
+
+
+  const getLocalDateStr = () => {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  };
+
   const [formData, setFormData] = useState({
     amount: '',
     type: 'Expense',
     category: '',
-    description: ''
+    description: '',
+    date: getLocalDateStr()
   });
+
+
 
   useEffect(() => {
     // Component mounted
@@ -42,7 +58,7 @@ const AddTransactionPage: React.FC = () => {
     setIsSubmitting(true);
     const submissionData = {
       ...formData,
-      amount: parseFloat(formData.amount as string) || 0
+      amount: Number((formData.amount as string).replace(/\D/g, '')) || 0
     };
 
     try {
@@ -130,10 +146,10 @@ const AddTransactionPage: React.FC = () => {
               <div className="relative group/input">
                 <span className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg md:text-xl group-focus-within/input:text-cyan-500 transition-colors">IDR</span>
                 <input
-                  type="number"
+                  type="text"
                   required
                   value={formData.amount}
-                  onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                  onChange={(e) => setFormData({...formData, amount: formatToDot(e.target.value)})}
                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[1.5rem] md:rounded-[2rem] py-4 md:py-6 pl-16 md:pl-20 pr-4 md:pr-6 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all font-black text-2xl md:text-4xl text-slate-900 dark:text-white tracking-tighter shadow-sm"
                   placeholder="0"
                 />
@@ -177,6 +193,20 @@ const AddTransactionPage: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2 md:space-y-3 md:col-span-2 mt-4 md:mt-0">
+                  <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Date</label>
+                  <div className="relative group/input">
+                    <input
+                      type="date"
+                      required
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-4 px-4 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-[10px] md:text-xs text-slate-900 dark:text-white shadow-sm"
+                    />
+                  </div>
+                </div>
+
             </div>
 
             <button

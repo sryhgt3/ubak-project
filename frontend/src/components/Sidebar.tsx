@@ -27,13 +27,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     },
     { 
       name: 'Income', 
-      path: '/inflow', 
+      path: '/income', 
       icon: <ArrowUpCircle size={20} />, 
       roles: ['VIP', 'Free'] 
     },
     { 
       name: 'Expenses', 
-      path: '/outflow', 
+      path: '/expense', 
       icon: <ArrowDownCircle size={20} />, 
       roles: ['VIP', 'Free'] 
     },

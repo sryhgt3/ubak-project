@@ -42,6 +42,7 @@ class AccountCreate(BaseModel):
     role: UserRole
 
 class TransactionCreate(BaseModel):
+    date: Optional[datetime] = None
     amount: float
     type: TransactionType
     category: str
@@ -101,3 +102,10 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+
+class TransactionUpdate(BaseModel):
+    amount: Optional[float] = None
+    type: Optional[TransactionType] = None
+    category: Optional[str] = None
+    description: Optional[str] = None
+    date: Optional[datetime] = None

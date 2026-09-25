@@ -20,9 +20,12 @@ class ProfileUpdate(BaseModel):
     max_spending: Optional[int] = None
 
 class UserOut(BaseModel):
+    id: int
     username: str
     email: Optional[str]
     role: UserRole
+    vip_expiration: Optional[datetime] = None
+    telegram_chat_id: Optional[str] = None
     monthly_income: Optional[int]
     savings_goal: Optional[str]
     dream_item: Optional[str]
@@ -34,6 +37,8 @@ class UserSummary(BaseModel):
     username: str
     email: Optional[str]
     role: UserRole
+    vip_expiration: Optional[datetime] = None
+    telegram_chat_id: Optional[str] = None
 
 class AccountCreate(BaseModel):
     username: str
@@ -109,3 +114,7 @@ class TransactionUpdate(BaseModel):
     category: Optional[str] = None
     description: Optional[str] = None
     date: Optional[datetime] = None
+
+class RoleUpdate(BaseModel):
+    role: UserRole
+    vip_expiration: Optional[datetime] = None

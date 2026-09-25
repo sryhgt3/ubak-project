@@ -49,6 +49,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: <UserPlus size={20} />, 
       roles: ['Admin'] 
     },
+    { 
+      name: 'Manage Users', 
+      path: '/admin/users', 
+      icon: <Activity size={20} />, 
+      roles: ['Admin'] 
+    },
   ];
 
   const filteredMenu = menuItems.filter(item => user && item.roles.includes(user.role));

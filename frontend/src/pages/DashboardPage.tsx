@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   Wallet
 } from 'lucide-react';
+import FinancialHealthWidget from '../components/FinancialHealthWidget';
 
 const Skeleton = ({ className }: { className?: string }) => (
   <div className={`animate-pulse bg-slate-200/50 dark:bg-white/10 rounded-[2rem] ${className}`} />
@@ -232,9 +233,10 @@ const DashboardPage: React.FC = () => {
       {isFetching ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6 md:mt-12">
           <Skeleton className="lg:col-span-8 h-[300px] md:h-[400px]" />
-          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
-            <Skeleton className="h-[140px] md:h-[190px]" />
-            <Skeleton className="h-[140px] md:h-[190px]" />
+          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 md:gap-6">
+            <Skeleton className="h-[140px] md:h-[160px]" />
+            <Skeleton className="h-[140px] md:h-[160px]" />
+            <Skeleton className="h-[140px] md:h-[160px]" />
           </div>
         </div>
       ) : (
@@ -268,7 +270,13 @@ const DashboardPage: React.FC = () => {
           </motion.div>
 
           {/* Workload / Targets Widget */}
-          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
+          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 md:gap-6">
+             <FinancialHealthWidget 
+               totalIncome={dashboardData?.total_income || 0} 
+               totalExpense={dashboardData?.total_expenses || 0} 
+               formatCurrency={formatCurrency} 
+             />
+             
              <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex flex-col justify-center min-h-[140px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 hover:border-cyan-500/30 group">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 dark:bg-cyan-500/20 blur-2xl rounded-full group-hover:bg-cyan-500/30 transition-colors pointer-events-none"></div>
                 <div className="bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 p-2.5 rounded-xl w-fit mb-4 relative z-10 border border-cyan-500/20">
@@ -456,4 +464,3 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
- DashboardPage;

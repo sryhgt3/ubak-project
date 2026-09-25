@@ -28,9 +28,11 @@ class ChatService:
             genai.configure(api_key=self.gemini_key)
 
     def _build_system_prompt(self, user: User) -> str:
-        total_income = sum(t.amount for t in user.transactions if t.type == TransactionType.Income)
-        total_expenses = sum(t.amount for t in user.transactions if t.type == TransactionType.Expense)
-        saldo = (user.monthly_income or 0) + total_income - total_expenses
+        from sqlalchemy.sql import func
+        income_sum = self.db.query(func.sum(Transaction.amount)).filter(Transaction.user_id == user.id, Transaction.type == TransactionType.Income).scalar() or 0
+        expense_sum = self.db.query(func.sum(Transaction.amount)).filter(Transaction.user_id == user.id, Transaction.type == TransactionType.Expense).scalar() or 0
+        saldo = (user.monthly_income or 0) + income_sum - expense_sum
+        
         today_str = datetime.utcnow().strftime("%Y-%m-%d")
         return (f"{SYSTEM_PROMPT}\n"
                 f"Data Keuangan User saat ini:\n"
@@ -67,17 +69,17 @@ class ChatService:
                     "type": "function",
                     "function": {
                         "name": "record_transaction",
-                        "description": "Catat transaksi baru",
+                        "description": "Catat transaksi baru. JANGAN MENGARANG kategori/deskripsi, biarkan kosong jika user tidak spesifik.",
                         "parameters": {
                             "type": "object",
                             "properties": {
                                 "amount": {"type": "number"},
                                 "type": {"type": "string", "enum": ["Income", "Expense"]},
-                                "category": {"type": "string"},
-                                "description": {"type": "string"},
+                                "category": {"type": "string", "description": "Biarkan kosong jika tidak disebutkan user"},
+                                "description": {"type": "string", "description": "Biarkan kosong jika tidak disebutkan user"},
                                 "date": {"type": "string", "description": "Format YYYY-MM-DD"}
                             },
-                            "required": ["amount", "type", "category", "description"]
+                            "required": ["amount", "type"]
                         }
                     }
                 },
@@ -149,17 +151,22 @@ class ChatService:
                     result = {}
                     
                     if tool_call.function.name == "record_transaction":
-                        d_obj = datetime.utcnow()
-                        if "date" in args and args["date"]:
-                            try:
-                                d_obj = datetime.strptime(args["date"], "%Y-%m-%d")
-                            except ValueError:
-                                pass
-                        t = Transaction(user_id=user.id, amount=args["amount"], type=TransactionType(args["type"]), category=args["category"], description=args["description"], date=d_obj)
-                        self.db.add(t)
-                        self.db.commit()
-                        result = {"status": "success"}
-                        hardcoded_response_msg = f"✅ Transaksi berhasil dicatat:\n**Rp {args['amount']:,.0f}** - {args.get('description', '')}"
+                        if "category" not in args or not args["category"] or "description" not in args or not args["description"]:
+                            result = {"status": "error", "message": "TOLAK PENCATATAN: Kategori atau Deskripsi kosong. Kamu HARUS membalas ke user dan tanyakan detailnya."}
+                            needs_second_ai_call = True
+                            hardcoded_response_msg = None
+                        else:
+                            d_obj = datetime.utcnow()
+                            if "date" in args and args["date"]:
+                                try:
+                                    d_obj = datetime.strptime(args["date"], "%Y-%m-%d")
+                                except ValueError:
+                                    pass
+                            t = Transaction(user_id=user.id, amount=args["amount"], type=TransactionType(args["type"]), category=args["category"], description=args["description"], date=d_obj)
+                            self.db.add(t)
+                            self.db.commit()
+                            result = {"status": "success"}
+                            hardcoded_response_msg = f"✅ Transaksi berhasil dicatat:\n**Rp {args['amount']:,.0f}** - {args.get('description', '')}"
                     
                     elif tool_call.function.name == "search_transactions":
                         # OPTIMIZATION: Push filtering to DB level
@@ -228,8 +235,11 @@ class ChatService:
 
     def _get_gemini_response(self, request: ChatRequest, user: User):
         try:
-            def record_transaction(amount: float, type: str, category: str, description: str, date: str = None):
-                """Catat transaksi baru"""
+            def record_transaction(amount: float, type: str, category: str = None, description: str = None, date: str = None):
+                """Catat transaksi baru. JANGAN MENGARANG kategori/deskripsi. Jika user tidak memberikan kategori/deskripsi spesifik, biarkan kosong."""
+                if not category or not description:
+                    return {"status": "error", "message": "TOLAK PENCATATAN: Kategori atau Deskripsi kosong. Kamu HARUS membalas ke user dan tanyakan 'Kategori dan deskripsi pengeluaran ini apa?'"}
+                
                 d_obj = datetime.utcnow()
                 if date:
                     try:

@@ -57,29 +57,31 @@ class ChatService:
             return self._get_openai_response(request, user)
 
     def _get_openai_response(self, request: ChatRequest, user: User):
+        logger.info(f"Menerima request OpenAI dari user: {user.username} | Pesan: {request.message}")
         try:
             messages = [{"role": "system", "content": self._build_system_prompt(user)}]
             if request.history:
                 for msg in request.history[-6:]:  # OPTIMIZATION: Only keep last 6 messages in history to save tokens
                     messages.append({"role": msg.role, "content": msg.content})
             messages.append({"role": "user", "content": request.message})
+            logger.info("Mengirim request ke OpenAI API...")
             
             tools = [
                 {
                     "type": "function",
                     "function": {
                         "name": "record_transaction",
-                        "description": "Catat transaksi baru. JANGAN MENGARANG kategori/deskripsi, biarkan kosong jika user tidak spesifik.",
+                        "description": "Catat transaksi baru. Kategori WAJIB dipetakan sesuai daftar di System Prompt.",
                         "parameters": {
                             "type": "object",
                             "properties": {
                                 "amount": {"type": "number"},
                                 "type": {"type": "string", "enum": ["Income", "Expense"]},
-                                "category": {"type": "string", "description": "Biarkan kosong jika tidak disebutkan user"},
-                                "description": {"type": "string", "description": "Biarkan kosong jika tidak disebutkan user"},
+                                "category": {"type": "string", "description": "WAJIB dipetakan ke daftar kategori valid (tidak boleh kosong/ngarang)."},
+                                "description": {"type": "string", "description": "Keterangan singkat"},
                                 "date": {"type": "string", "description": "Format YYYY-MM-DD"}
                             },
-                            "required": ["amount", "type"]
+                            "required": ["amount", "type", "category", "description", "date"]
                         }
                     }
                 },
@@ -151,8 +153,9 @@ class ChatService:
                     result = {}
                     
                     if tool_call.function.name == "record_transaction":
-                        if "category" not in args or not args["category"] or "description" not in args or not args["description"]:
-                            result = {"status": "error", "message": "TOLAK PENCATATAN: Kategori atau Deskripsi kosong. Kamu HARUS membalas ke user dan tanyakan detailnya."}
+                        logger.info(f"[OpenAI Tool] Mengeksekusi record_transaction: {args.get('amount')} | {args.get('type')} | {args.get('category')}")
+                        if "category" not in args or not args["category"] or "description" not in args or not args["description"] or "date" not in args or not args["date"]:
+                            result = {"status": "error", "message": "TOLAK PENCATATAN: Kategori, Deskripsi, atau Tanggal kosong. Kamu HARUS membalas ke user dan tanyakan data yang kurang tersebut."}
                             needs_second_ai_call = True
                             hardcoded_response_msg = None
                         else:
@@ -234,11 +237,13 @@ class ChatService:
             raise HTTPException(status_code=500, detail="Failed to get response from OpenAI")
 
     def _get_gemini_response(self, request: ChatRequest, user: User):
+        logger.info(f"Menerima request Gemini dari user: {user.username} | Pesan: {request.message}")
         try:
             def record_transaction(amount: float, type: str, category: str = None, description: str = None, date: str = None):
-                """Catat transaksi baru. JANGAN MENGARANG kategori/deskripsi. Jika user tidak memberikan kategori/deskripsi spesifik, biarkan kosong."""
-                if not category or not description:
-                    return {"status": "error", "message": "TOLAK PENCATATAN: Kategori atau Deskripsi kosong. Kamu HARUS membalas ke user dan tanyakan 'Kategori dan deskripsi pengeluaran ini apa?'"}
+                """Catat transaksi baru. Kategori WAJIB dipetakan ke salah satu daftar valid di System Prompt."""
+                logger.info(f"[Gemini Tool] Mengeksekusi record_transaction: {amount} | {type} | {category}")
+                if not category or not description or not date:
+                    return {"status": "error", "message": "TOLAK PENCATATAN: Kategori, Deskripsi, atau Tanggal kosong. Kamu HARUS membalas ke user dan tanyakan data yang kurang tersebut."}
                 
                 d_obj = datetime.utcnow()
                 if date:
@@ -300,6 +305,7 @@ class ChatService:
                 history.append({"role": "user" if msg.role == "user" else "model", "parts": [msg.content]})
             
             chat = model.start_chat(history=history, enable_automatic_function_calling=True)
+            logger.info("Mengirim request ke Gemini API (menunggu respon dan auto-function calling)...")
             response = chat.send_message(request.message)
             return ChatResponse(response=response.text)
         except Exception as e:

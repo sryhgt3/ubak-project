@@ -11,5 +11,5 @@ def get_chat_service(db: Session = Depends(get_db)):
     return ChatService(db)
 
 @router.post("/", response_model=ChatResponse)
-async def chat_with_ai(request: ChatRequest, service: ChatService = Depends(get_chat_service), current_user: User = Depends(get_current_vip_user)):
+def chat_with_ai(request: ChatRequest, service: ChatService = Depends(get_chat_service), current_user: User = Depends(get_current_vip_user)):
     return service.get_chat_response(request, current_user)

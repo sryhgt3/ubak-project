@@ -53,8 +53,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
     if (path === '/dashboard') return 'DASHBOARD';
     if (path === '/add-transaction') return 'ADD TRANSACTION';
     if (path === '/add-account') return 'ADD USER';
-    if (path === '/inflow') return 'INFLOW';
-    if (path === '/outflow') return 'OUTFLOW';
+    if (path === '/income') return 'INCOME';
+    if (path === '/expense') return 'EXPENSE';
     if (path === '/profile') return 'PROFILE';
     return 'OVERVIEW';
   };
@@ -70,8 +70,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   const commands = [
     { name: 'Go to Dashboard', icon: <LayoutDashboard size={14}/>, path: '/dashboard' },
     { name: 'Add Transaction', icon: <PlusCircle size={14}/>, path: '/add-transaction' },
-    { name: 'View Income', icon: <ArrowUpCircle size={14}/>, path: '/inflow' },
-    { name: 'View Expenses', icon: <ArrowDownCircle size={14}/>, path: '/outflow' },
+    { name: 'View Income', icon: <ArrowUpCircle size={14}/>, path: '/income' },
+    { name: 'View Expenses', icon: <ArrowDownCircle size={14}/>, path: '/expense' },
     ...(user?.role === 'Admin' ? [{ name: 'Add User', icon: <UserPlus size={14}/>, path: '/add-account' }] : []),
     { name: 'Profile Settings', icon: <User size={14}/>, path: '/profile' },
   ];

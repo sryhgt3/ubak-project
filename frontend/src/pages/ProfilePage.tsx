@@ -12,14 +12,26 @@ import {
   AlertCircle,
   Zap,
   Activity,
-  Lock
+  Lock,
+  Send
 } from 'lucide-react';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const ProfilePage: React.FC = () => {
   const { user, token, updateUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [telegramToken, setTelegramToken] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  
+  const formatToDot = (val: string | number) => {
+    if (val == null) return '';
+    const numericStr = String(val).replace(/\D/g, '');
+    if (!numericStr) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(numericStr));
+  };
+
   const [formData, setFormData] = useState({
     username: user?.username || '',
     password: '',
@@ -51,8 +63,8 @@ const ProfilePage: React.FC = () => {
     // Copy formData and remove password if it's empty so we don't overwrite with empty string
     const submissionData: any = {
       ...formData,
-      monthly_income: parseInt(formData.monthly_income) || 0,
-      max_spending: parseInt(formData.max_spending) || 0
+      monthly_income: Number(formData.monthly_income.replace(/\D/g, '')) || 0,
+      max_spending: Number(formData.max_spending.replace(/\D/g, '')) || 0
     };
     
     if (!submissionData.password) {
@@ -74,6 +86,45 @@ const ProfilePage: React.FC = () => {
       setMessage({ type: 'error', text: error.response?.data?.detail || 'Update failed' });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleConnectTelegram = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!telegramToken.trim()) return;
+    setIsConnecting(true);
+    
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/telegram/verify-token`, 
+        { token: telegramToken }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message || 'Telegram connected successfully!');
+      setTelegramToken('');
+      if (user) {
+        updateUser({ ...user, telegram_chat_id: 'connected' });
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Invalid or expired token.');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleDisconnectTelegram = async () => {
+    if (!window.confirm('Are you sure you want to disconnect your Telegram account?')) return;
+    
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8800'}/telegram/disconnect`, 
+        {}, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message || 'Telegram disconnected successfully!');
+      if (user) {
+        updateUser({ ...user, telegram_chat_id: null });
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to disconnect.');
     }
   };
 
@@ -181,7 +232,7 @@ const ProfilePage: React.FC = () => {
                   type="text"
                   inputMode="numeric"
                   value={formData.monthly_income}
-                  onChange={e => setFormData({...formData, monthly_income: e.target.value.replace(/[^0-9]/g, '')})}
+                  onChange={e => setFormData({...formData, monthly_income: formatToDot(e.target.value)})}
                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
@@ -218,10 +269,78 @@ const ProfilePage: React.FC = () => {
                   type="text"
                   inputMode="numeric"
                   value={formData.max_spending}
-                  onChange={e => setFormData({...formData, max_spending: e.target.value.replace(/[^0-9]/g, '')})}
+                  onChange={e => setFormData({...formData, max_spending: formatToDot(e.target.value)})}
                   className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Telegram Integration */}
+        {(user?.role === 'VIP' || user?.role === 'Admin') && (
+          <div className="md:col-span-2 bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-8 rounded-[2.5rem] md:rounded-[3rem] shadow-xl dark:shadow-2xl relative overflow-hidden group hover:border-blue-500/30 transition-colors">
+            <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/5 dark:bg-blue-500/10 blur-2xl rounded-full pointer-events-none group-hover:bg-blue-500/20 transition-colors"></div>
+            
+            <div className="flex items-center gap-3 text-slate-900 dark:text-white font-black text-[10px] md:text-xs uppercase tracking-widest relative z-10 mb-6">
+              <div className="w-10 h-10 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center border border-blue-500/20">
+                <Send size={18} />
+              </div>
+              Telegram Integration
+            </div>
+
+            <div className="relative z-10 space-y-4">
+              {user?.telegram_chat_id ? (
+                <div className="flex flex-col md:flex-row items-center gap-4 bg-green-500/10 p-5 rounded-2xl border border-green-500/20">
+                  <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center text-green-600 dark:text-green-400">
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-1">Successfully Connected!</h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      You can now record Income & Expenses directly by chatting with our Telegram bot.
+                    </p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={handleDisconnectTelegram}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Connect your account to our Telegram bot to quickly add transactions via chat!
+                    <br />
+                    <strong>Step 1:</strong> Chat our bot on Telegram and type <code>/connect</code> to get your token.
+                    <br />
+                    <strong>Step 2:</strong> Enter the token below to link your account.
+                  </p>
+
+                  <div className="flex gap-4 items-end">
+                    <div className="flex-1 space-y-3">
+                      <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Connect Token</label>
+                      <input 
+                        type="text" 
+                        value={telegramToken}
+                        onChange={e => setTelegramToken(e.target.value.toUpperCase())}
+                        placeholder="E.g. A8B9C0"
+                        className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl py-3 md:py-3.5 px-5 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all font-bold text-xs text-slate-900 dark:text-white shadow-sm"
+                      />
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={handleConnectTelegram}
+                      disabled={isConnecting || !telegramToken}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl md:rounded-2xl font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50 h-[46px] md:h-[50px] flex items-center"
+                    >
+                      {isConnecting ? <Loader2 className="animate-spin" size={16} /> : 'Connect'}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

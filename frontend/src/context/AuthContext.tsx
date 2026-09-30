@@ -8,6 +8,7 @@ interface User {
   dream_item?: string;
   max_spending?: number;
   setup_completed: boolean;
+  telegram_chat_id?: string | null;
 }
 
 interface AuthContextType {

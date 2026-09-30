@@ -20,6 +20,8 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String)
     role = Column(SQLEnum(UserRole), default=UserRole.Free)
+    vip_expiration = Column(DateTime, nullable=True)
+    telegram_chat_id = Column(String, unique=True, index=True, nullable=True)
     monthly_income = Column(Integer, nullable=True)
     savings_goal = Column(String, nullable=True)
     dream_item = Column(String, nullable=True)

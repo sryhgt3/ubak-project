@@ -15,9 +15,12 @@ class UserService:
                 setup_completed = False
                 
         return {
+            "id": user.id,
             "username": user.username,
             "email": user.email,
             "role": user.role,
+            "vip_expiration": user.vip_expiration,
+            "telegram_chat_id": user.telegram_chat_id,
             "monthly_income": user.monthly_income,
             "savings_goal": user.savings_goal,
             "dream_item": user.dream_item,
@@ -83,3 +86,33 @@ class UserService:
                 user = User(username=uname, hashed_password=get_password_hash(pword), role=role)
                 self.user_repo.create(user)
         return {"message": "Users seeded successfully"}
+
+    def get_all_users(self):
+        users = self.user_repo.db.query(User).all()
+        result = []
+        for u in users:
+            result.append(self.get_user_profile(u))
+        return result
+
+    def update_user_role(self, user_id: int, role_data):
+        user = self.user_repo.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user.role = role_data.role
+        if role_data.role == UserRole.VIP:
+            user.vip_expiration = role_data.vip_expiration
+        else:
+            user.vip_expiration = None
+            
+        self.user_repo.commit_changes()
+        return self.get_user_profile(user)
+
+    def delete_user(self, user_id: int):
+        user = self.user_repo.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        self.user_repo.db.delete(user)
+        self.user_repo.commit_changes()
+        return {"message": "User deleted successfully"}

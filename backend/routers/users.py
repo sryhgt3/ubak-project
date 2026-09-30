@@ -40,3 +40,31 @@ async def create_account(
 @router.post("/seed")
 async def seed_users(service: UserService = Depends(get_user_service)):
     return service.seed_initial_users()
+
+from dependencies import get_current_admin_user
+from typing import List
+from schemas import RoleUpdate
+
+@router.get("/", response_model=List[UserOut])
+async def get_all_users(
+    admin_user: User = Depends(get_current_admin_user),
+    service: UserService = Depends(get_user_service)
+):
+    return service.get_all_users()
+
+@router.put("/{user_id}/role", response_model=UserOut)
+async def update_user_role(
+    user_id: int,
+    role_data: RoleUpdate,
+    admin_user: User = Depends(get_current_admin_user),
+    service: UserService = Depends(get_user_service)
+):
+    return service.update_user_role(user_id, role_data)
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: int,
+    admin_user: User = Depends(get_current_admin_user),
+    service: UserService = Depends(get_user_service)
+):
+    return service.delete_user(user_id)

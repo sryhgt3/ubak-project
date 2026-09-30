@@ -27,13 +27,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     },
     { 
       name: 'Income', 
-      path: '/inflow', 
+      path: '/income', 
       icon: <ArrowUpCircle size={20} />, 
       roles: ['VIP', 'Free'] 
     },
     { 
       name: 'Expenses', 
-      path: '/outflow', 
+      path: '/expense', 
       icon: <ArrowDownCircle size={20} />, 
       roles: ['VIP', 'Free'] 
     },
@@ -47,6 +47,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       name: 'Add User', 
       path: '/add-account', 
       icon: <UserPlus size={20} />, 
+      roles: ['Admin'] 
+    },
+    { 
+      name: 'Manage Users', 
+      path: '/admin/users', 
+      icon: <Activity size={20} />, 
       roles: ['Admin'] 
     },
   ];

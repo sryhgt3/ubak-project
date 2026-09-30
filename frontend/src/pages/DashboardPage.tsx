@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { 
-  ResponsiveContainer, BarChart, Bar, AreaChart, Area, XAxis, Tooltip, Cell 
+  ResponsiveContainer, AreaChart, Area, XAxis, Tooltip 
 } from 'recharts';
 import { 
   ShieldCheck, 
@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   Wallet
 } from 'lucide-react';
+import FinancialHealthWidget from '../components/FinancialHealthWidget';
 
 const Skeleton = ({ className }: { className?: string }) => (
   <div className={`animate-pulse bg-slate-200/50 dark:bg-white/10 rounded-[2rem] ${className}`} />
@@ -163,17 +164,26 @@ const DashboardPage: React.FC = () => {
   const expenseTransactions = dashboardData?.recent_transactions?.filter((t: any) => t.type === 'Expense').slice(0, 5) || [];
 
   // Prepare chart data
-  const comparisonData = [
-    { name: 'Income', amount: dashboardData?.total_income || 0, fill: '#22d3ee' },
-    { name: 'Expenses', amount: dashboardData?.total_expenses || 0, fill: '#8b5cf6' }
-  ];
+
+  
+  const timeSeriesComparisonData = React.useMemo(() => {
+    if (!dashboardData?.recent_transactions) return [];
+    const aggregated: Record<string, { date: string, income: number, expense: number }> = {};
+    [...dashboardData.recent_transactions].reverse().forEach((t: any) => {
+      const dateKey = new Date(Number(t.date.split('T')[0].split('-')[0]), Number(t.date.split('T')[0].split('-')[1])-1, Number(t.date.split('T')[0].split('-')[2])).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      if (!aggregated[dateKey]) aggregated[dateKey] = { date: dateKey, income: 0, expense: 0 };
+      if (t.type === 'Income') aggregated[dateKey].income += t.amount;
+      if (t.type === 'Expense') aggregated[dateKey].expense += t.amount;
+    });
+    return Object.values(aggregated);
+  }, [dashboardData]);
 
   const timeSeriesData = dashboardData?.recent_transactions ? 
     [...dashboardData.recent_transactions]
       .reverse()
       .filter((t: any) => chartView === 'income' ? t.type === 'Income' : t.type === 'Expense')
       .map((t: any) => ({
-        date: new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+        date: new Date(Number(t.date.split('T')[0].split('-')[0]), Number(t.date.split('T')[0].split('-')[1])-1, Number(t.date.split('T')[0].split('-')[2])).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
         amount: t.amount,
         category: t.category
       })) : [];
@@ -223,9 +233,10 @@ const DashboardPage: React.FC = () => {
       {isFetching ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6 md:mt-12">
           <Skeleton className="lg:col-span-8 h-[300px] md:h-[400px]" />
-          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
-            <Skeleton className="h-[140px] md:h-[190px]" />
-            <Skeleton className="h-[140px] md:h-[190px]" />
+          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 md:gap-6">
+            <Skeleton className="h-[140px] md:h-[160px]" />
+            <Skeleton className="h-[140px] md:h-[160px]" />
+            <Skeleton className="h-[140px] md:h-[160px]" />
           </div>
         </div>
       ) : (
@@ -259,7 +270,13 @@ const DashboardPage: React.FC = () => {
           </motion.div>
 
           {/* Workload / Targets Widget */}
-          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
+          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 md:gap-6">
+             <FinancialHealthWidget 
+               totalIncome={dashboardData?.total_income || 0} 
+               totalExpense={dashboardData?.total_expenses || 0} 
+               formatCurrency={formatCurrency} 
+             />
+             
              <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl dark:bg-[#0a0a0a] p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/50 dark:border-white/10 relative overflow-hidden flex flex-col justify-center min-h-[140px] md:min-h-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl transition-all duration-500 hover:border-cyan-500/30 group">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 dark:bg-cyan-500/20 blur-2xl rounded-full group-hover:bg-cyan-500/30 transition-colors pointer-events-none"></div>
                 <div className="bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 p-2.5 rounded-xl w-fit mb-4 relative z-10 border border-cyan-500/20">
@@ -316,15 +333,22 @@ const DashboardPage: React.FC = () => {
           <div className="h-[240px] md:h-[320px] lg:h-[380px] relative z-10">
             {chartView === 'comparison' ? (
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} />
-                  <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} content={<CustomTooltip />} />
-                  <Bar dataKey="amount" radius={[16, 16, 0, 0]} maxBarSize={120}>
-                    {comparisonData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
+                <AreaChart data={timeSeriesComparisonData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="income" stroke="#22d3ee" strokeWidth={4} fillOpacity={1} fill="url(#colorIncome)" />
+                  <Area type="monotone" dataKey="expense" stroke="#8b5cf6" strokeWidth={4} fillOpacity={1} fill="url(#colorExpense)" />
+                </AreaChart>
               </ResponsiveContainer>
             ) : (
               timeSeriesData.length > 0 ? (
@@ -362,7 +386,7 @@ const DashboardPage: React.FC = () => {
           const colorClass = isIncome ? 'text-cyan-600 dark:text-cyan-400' : 'text-violet-600 dark:text-violet-400';
           const bgClass = isIncome ? 'bg-cyan-500/5 dark:bg-cyan-500/10' : 'bg-violet-500/5 dark:bg-violet-500/10';
           const borderClass = isIncome ? 'border-cyan-400/10' : 'border-violet-400/10';
-          const path = isIncome ? '/inflow' : '/outflow';
+          const path = isIncome ? '/income' : '/expense';
 
           return (
             <motion.div 
@@ -407,7 +431,7 @@ const DashboardPage: React.FC = () => {
                             {isIncome ? '+' : '-'}{formatCurrency(t.amount)}
                           </p>
                           <p className="text-[8px] md:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-0.5">
-                            {new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                            {new Date(Number(t.date.split('T')[0].split('-')[0]), Number(t.date.split('T')[0].split('-')[1])-1, Number(t.date.split('T')[0].split('-')[2])).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                           </p>
                         </div>
                       </motion.div>
@@ -440,4 +464,3 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
- DashboardPage;
